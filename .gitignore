@@ -1,0 +1,5 @@
+node_modules/
+.harness/
+docs/superpowers/
+.worktrees/
+.superpowers/

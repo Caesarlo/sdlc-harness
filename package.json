@@ -1,0 +1,11 @@
+{
+  "name": "sdlc-harness",
+  "version": "0.1.0",
+  "description": "Portable CLI and workflow docs for a requirements-to-deployment coding-agent harness",
+  "type": "module",
+  "bin": { "sdlc-harness": "./src/cli.js" },
+  "engines": { "node": ">=20" },
+  "scripts": { "test": "node --test" },
+  "files": ["src", "templates"],
+  "license": "MIT"
+}
