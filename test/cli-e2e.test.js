@@ -33,3 +33,24 @@ test('adopt on a directory with an existing AGENTS.md reports it as skipped', ()
   assert.match(adoptOut, /skipped 1 existing files?/);
   assert.equal(fs.readFileSync(path.join(dir, 'AGENTS.md'), 'utf8'), 'CUSTOM');
 });
+
+test('new-feature with a duplicate id exits non-zero with a clean error, not a raw stack trace', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  fs.writeFileSync(path.join(dir, 'feature_list.json'), JSON.stringify({
+    project: 'demo', schema_version: '1.0', milestones: [{ id: 'M0' }],
+    features: [{ id: 'M0-FEAT-001', milestone: 'M0', dependencies: [], verification: [] }],
+  }));
+
+  let threw = false;
+  try {
+    execFileSync('node', [CLI, 'new-feature'], { cwd: dir, input: 'M0-FEAT-001\n' });
+  } catch (err) {
+    threw = true;
+    assert.notEqual(err.status, 0);
+    const stderr = err.stderr.toString();
+    assert.match(stderr, /Feature id already exists: M0-FEAT-001/);
+    assert.doesNotMatch(stderr, /UnhandledPromiseRejection/);
+    assert.doesNotMatch(stderr, /at\s+\S+\s+\(.*:\d+:\d+\)/);
+  }
+  assert.equal(threw, true);
+});
