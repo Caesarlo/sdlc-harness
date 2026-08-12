@@ -9,6 +9,7 @@
 - Record every load-bearing technical decision as an ADR in `docs/adr/`, using
   `docs/adr/template.md` as the shape (context, decision, considered options with
   pros/cons, consequences, and a `topic:` field used by the ADR-coverage validator).
+  Add a row for it to `docs/adr/README.md`, the ADR index.
 - Only open a new ADR for decisions that are load-bearing: they affect multiple
   features, are costly to reverse, or cross a service/module boundary. Local
   implementation details belong in code comments or the feature itself, not an ADR.
@@ -23,7 +24,7 @@
   old one.
 
 ## Required Output Artifacts
-- One or more `docs/adr/NNNN-*.md` files.
+- One or more `docs/adr/NNNN-*.md` files, each indexed in `docs/adr/README.md`.
 - An architecture overview doc if the project has more than a handful of components.
 
 ## Exit Conditions
