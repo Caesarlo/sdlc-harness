@@ -13,11 +13,14 @@ Claude Code additionally gets thin skill wrappers for discoverability.
     npx sdlc-harness new-feature
     npx sdlc-harness new-milestone
 
+`init`/`adopt` scaffold a `.githooks/pre-commit` hook, but it stays inert until you point git
+at it once: `git config core.hooksPath .githooks`.
+
 ## Commands
 
 - `sdlc-harness init` — scaffold the full harness (docs, templates, hooks, CI) into an empty or new project.
 - `sdlc-harness adopt` — insert only the missing pieces into an existing repository, leaving existing files untouched.
-- `sdlc-harness validate` — run all governance checks (requirements, ADRs, user stories, feature breakdown, milestone plan, deployment/observability docs) and report pass/fail.
+- `sdlc-harness validate` — check `feature_list.json` for structural correctness (required fields, valid status values, milestone references, at least one verification entry per feature), no dependency cycles or references to unknown features, only one feature `in_progress` at a time, evidence-backed pass gates (a `passing` feature needs a `review` entry and progress can't regress), no feature depending on a later milestone, ADR coverage of every topic required by `harness.config.json`, and that every non-placeholder feature's `source_refs` point to real files. Exits with a non-zero status on any failure, which is what the pre-commit hook and CI deploy workflow rely on to block bad states.
 - `sdlc-harness status` — summarize current milestone and feature state at a glance.
 - `sdlc-harness new-feature` — create a new feature breakdown entry from the template.
 - `sdlc-harness new-milestone` — create a new milestone plan entry from the template.
