@@ -5,7 +5,14 @@
 <h1 align="center">sdlc-harness</h1>
 
 <p align="center">
-  <strong><a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a></strong>
+  <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.0-4c1.svg" alt="版本 0.1.0"></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/Node.js-%3E%3D20-339933.svg?logo=nodedotjs&logoColor=white" alt="Node.js 20 或更高版本"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT 许可证"></a>
+</p>
+
+<p align="center">
+  <a href="README.md"><img src="https://img.shields.io/badge/README-English-2563eb.svg" alt="Read in English"></a>
+  <a href="README.zh-CN.md"><img src="https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-dc2626.svg" alt="阅读简体中文版本"></a>
 </p>
 
 <p align="center">
