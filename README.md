@@ -6,7 +6,7 @@
   </picture>
 </p>
 
-<h1 align="center">sdlc-harness</h1>
+<h1 align="center">SDLC-Harness</h1>
 
 <p align="center">
   <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.0-f59e0b?style=flat-square&labelColor=262626" alt="Version 0.1.0"></a>
@@ -29,8 +29,8 @@
 </p>
 
 <p align="center">
-  <a href="#quickstart">Quickstart</a> &nbsp;&middot;&nbsp;
-  <a href="#the-full-sdlc-workflow">Workflow</a> &nbsp;&middot;&nbsp;
+  <a href="#quickstart">Quickstart</a>  · 
+  <a href="#the-full-sdlc-workflow">Workflow</a>  · 
   <a href="#commands">Commands</a>
 </p>
 
@@ -205,7 +205,6 @@ After `init` or `adopt`, the repository contains:
 
 <details>
 <summary><strong>Show the generated files and hook setup</strong></summary>
-
 
 ```text
 AGENTS.md                    # startup, routing, feature, and session rules

@@ -6,7 +6,7 @@
   </picture>
 </p>
 
-<h1 align="center">sdlc-harness</h1>
+<h1 align="center">SDLC-Harness</h1>
 
 <p align="center">
   <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.0-f59e0b?style=flat-square&labelColor=262626" alt="版本 0.1.0"></a>
@@ -28,8 +28,8 @@
 </p>
 
 <p align="center">
-  <a href="#快速开始">快速开始</a> &nbsp;&middot;&nbsp;
-  <a href="#完整-sdlc-工作流">工作流</a> &nbsp;&middot;&nbsp;
+  <a href="#快速开始">快速开始</a>  · 
+  <a href="#完整-sdlc-工作流">工作流</a>  · 
   <a href="#命令">命令</a>
 </p>
 
@@ -200,7 +200,6 @@ flowchart LR
 <details>
 <summary><strong>查看生成的文件和 Git hook 配置</strong></summary>
 
-
 ```text
 AGENTS.md                    # 启动、路由、功能和会话规则
 feature_list.json            # 里程碑、功能、依赖、状态和证据
@@ -225,22 +224,22 @@ git config core.hooksPath .githooks
 
 ## 命令
 
-| 命令 | 作用 |
-|---|---|
-| `sdlc-harness init` | 在空仓库或新仓库中生成完整 harness。 |
-| `sdlc-harness adopt` | 添加缺失的 harness 文件，不覆盖已有文件。 |
-| `sdlc-harness validate` | 运行全部结构与治理检查；失败时以非零状态退出。 |
-| `sdlc-harness status` | 以 JSON 输出里程碑数量、各状态功能数量和当前功能。 |
-| `sdlc-harness new-feature` | 通过交互问答向 `feature_list.json` 添加功能。 |
-| `sdlc-harness new-milestone` | 通过交互问答向 `feature_list.json` 添加里程碑。 |
+| 命令                         | 作用                                               |
+| ---------------------------- | -------------------------------------------------- |
+| `sdlc-harness init`          | 在空仓库或新仓库中生成完整 harness。               |
+| `sdlc-harness adopt`         | 添加缺失的 harness 文件，不覆盖已有文件。          |
+| `sdlc-harness validate`      | 运行全部结构与治理检查；失败时以非零状态退出。     |
+| `sdlc-harness status`        | 以 JSON 输出里程碑数量、各状态功能数量和当前功能。 |
+| `sdlc-harness new-feature`   | 通过交互问答向`feature_list.json` 添加功能。       |
+| `sdlc-harness new-milestone` | 通过交互问答向`feature_list.json` 添加里程碑。     |
 
 ## Agent 兼容性
 
-| Agent | 核心工作流 | 额外集成 |
-|---|---:|---|
-| Claude Code | 支持 | 每个工作流阶段都有轻量 skill 包装 |
-| Codex 及其他支持 `AGENTS.md` 的 Agent | 支持 | 直接使用仓库协议 |
-| 其他能够读取文件的编码 Agent | 支持 | 需要先明确要求 Agent 阅读 `AGENTS.md` |
+| Agent                                | 核心工作流 | 额外集成                             |
+| ------------------------------------ | ---------: | ------------------------------------ |
+| Claude Code                          |       支持 | 每个工作流阶段都有轻量 skill 包装    |
+| Codex 及其他支持`AGENTS.md` 的 Agent |       支持 | 直接使用仓库协议                     |
+| 其他能够读取文件的编码 Agent         |       支持 | 需要先明确要求 Agent 阅读`AGENTS.md` |
 
 `.claude/skills/` 中的包装不包含独立流程逻辑。规范流程仍然位于 `AGENTS.md` 和
 `docs/workflow/` 中，避免不同 Agent 的行为逐渐分叉。
