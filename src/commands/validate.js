@@ -31,8 +31,13 @@ export function runValidate(repoRoot) {
     }
   }
 
+  const structuralResult = validateStructural(data);
+  if (!structuralResult.ok) {
+    return { ok: false, errors: structuralResult.errors.map((error) => `[structural] ${error}`) };
+  }
+
   const namedResults = [
-    ['structural', validateStructural(data)],
+    ['structural', structuralResult],
     ['dependency-cycles', validateDependencyCycles(data)],
     ['pass-gate', validatePassGate(data, previousSnapshot)],
     ['milestone-order', validateMilestoneOrder(data)],
