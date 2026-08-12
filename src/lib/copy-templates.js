@@ -33,3 +33,19 @@ export function copySpecialFiles(entries, data, writeFn) {
   }
   return written;
 }
+
+export function buildSpecialEntries(targetDir) {
+  const skillsRoot = path.join(TEMPLATES_ROOT, 'skills', 'claude-code');
+  const skills = fs.readdirSync(skillsRoot, { withFileTypes: true })
+    .filter((e) => e.isDirectory())
+    .map((e) => ({
+      src: path.join(skillsRoot, e.name, 'SKILL.md'),
+      destRelative: path.join(targetDir, '.claude', 'skills', e.name, 'SKILL.md'),
+    }));
+
+  return [
+    { src: path.join(TEMPLATES_ROOT, 'special', 'githooks', 'pre-commit.tmpl'), destRelative: path.join(targetDir, '.githooks', 'pre-commit'), mode: 0o755 },
+    { src: path.join(TEMPLATES_ROOT, 'special', 'ci', 'deploy.yml.tmpl'), destRelative: path.join(targetDir, '.github', 'workflows', 'deploy.yml') },
+    ...skills,
+  ];
+}
