@@ -6,15 +6,21 @@
 ## What The Agent Does
 - Fill in `.github/workflows/deploy.yml` (scaffolded by `init`/`adopt`) for the actual
   deploy target.
-- Work through a release checklist: versioning/changelog, rollback plan, required
-  environment configuration, and who/what gets notified.
-- Close the milestone's `*-RELEASE-001` gate feature (from stage 5) only once the
-  checklist is complete and the deployment has actually run.
+- Decompose the milestone's `*-RELEASE-001` placeholder feature (from stage 5) into
+  concrete release-checklist features: versioning/changelog, rollback plan, required
+  environment configuration, who/what gets notified, and the deployment run itself. The
+  placeholder feature must never be marked `passing` — only decomposed, same as
+  `*-SCOPE-001` in stage 4.
+- Work each decomposed feature to `passing`, with evidence recorded per feature (a
+  completed deployment, or a documented and approved reason a given item is deferred).
 
 ## Required Output Artifacts
-- A completed deployment, or a documented reason it's deferred, recorded as evidence on
-  the milestone's `*-RELEASE-001` feature.
+- Updated `feature_list.json` with the concrete release-checklist features that replace
+  the milestone's `*-RELEASE-001` placeholder.
 
 ## Exit Conditions
-- The `*-RELEASE-001` feature for the milestone is `passing`, with evidence pointing at
-  the actual deployment (or an explicit, approved decision to defer).
+- The concrete release-checklist features decomposed from `*-RELEASE-001` are all
+  `passing`, with evidence pointing at the actual deployment (or an explicit, approved
+  decision to defer a given item).
+- `npx sdlc-harness validate` reports no `pass-gate` errors for the milestone (no
+  placeholder feature marked `passing`).
