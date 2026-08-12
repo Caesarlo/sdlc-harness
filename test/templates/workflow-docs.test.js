@@ -21,3 +21,11 @@ test('03-user-stories.md has the required stage-doc shape', () => assertStageDoc
 test('04-feature-breakdown.md has the required stage-doc shape', () => assertStageDocShape('04-feature-breakdown.md'));
 test('05-milestone-planning.md has the required stage-doc shape', () => assertStageDocShape('05-milestone-planning.md'));
 test('06-agile-tdd.md has the required stage-doc shape', () => assertStageDocShape('06-agile-tdd.md'));
+test('07-self-acceptance.md has the required stage-doc shape', () => assertStageDocShape('07-self-acceptance.md'));
+test('08-deployment.md has the required stage-doc shape', () => assertStageDocShape('08-deployment.md'));
+test('09-observability-feedback.md has the required stage-doc shape', () => assertStageDocShape('09-observability-feedback.md'));
+
+test('exactly 9 workflow docs exist', () => {
+  const files = fs.readdirSync(WORKFLOW_DIR).filter((f) => f.endsWith('.md'));
+  assert.equal(files.length, 9);
+});
