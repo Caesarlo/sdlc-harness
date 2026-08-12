@@ -11,12 +11,25 @@ import { validateStageGate } from '../validators/stage-gate.js';
 const SNAPSHOT_RELATIVE_PATH = path.join('.harness', 'last-validated-features.json');
 
 export function runValidate(repoRoot) {
-  const data = JSON.parse(fs.readFileSync(path.join(repoRoot, 'feature_list.json'), 'utf8'));
+  let data;
+  try {
+    data = JSON.parse(fs.readFileSync(path.join(repoRoot, 'feature_list.json'), 'utf8'));
+  } catch (err) {
+    return { ok: false, errors: [`feature_list.json: ${err.message}`] };
+  }
+
   const config = loadConfig(path.join(repoRoot, 'harness.config.json'));
   const snapshotPath = path.join(repoRoot, SNAPSHOT_RELATIVE_PATH);
-  const previousSnapshot = fs.existsSync(snapshotPath)
-    ? JSON.parse(fs.readFileSync(snapshotPath, 'utf8'))
-    : null;
+  let previousSnapshot = null;
+  if (fs.existsSync(snapshotPath)) {
+    try {
+      previousSnapshot = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
+    } catch {
+      // Corrupted/unreadable snapshot is treated as "no previous snapshot" so a
+      // damaged cache file doesn't block validation from proceeding.
+      previousSnapshot = null;
+    }
+  }
 
   const namedResults = [
     ['structural', validateStructural(data)],

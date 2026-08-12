@@ -37,6 +37,27 @@ test('passes on a valid repo and writes a snapshot', () => {
   assert.equal(fs.existsSync(path.join(dir, '.harness', 'last-validated-features.json')), true);
 });
 
+test('returns ok:false instead of throwing when feature_list.json is missing', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  fs.mkdirSync(path.join(dir, 'docs', 'adr'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'harness.config.json'), JSON.stringify({ projectName: 'demo', requiredAdrTopics: [] }));
+  const result = runValidate(dir);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.length > 0);
+  assert.ok(result.errors[0].startsWith('feature_list.json:'));
+});
+
+test('returns ok:false instead of throwing when feature_list.json is malformed JSON', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  fs.mkdirSync(path.join(dir, 'docs', 'adr'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'harness.config.json'), JSON.stringify({ projectName: 'demo', requiredAdrTopics: [] }));
+  fs.writeFileSync(path.join(dir, 'feature_list.json'), '{ not valid json');
+  const result = runValidate(dir);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.length > 0);
+  assert.ok(result.errors[0].startsWith('feature_list.json:'));
+});
+
 test('fails and reports errors from a specific validator, prefixed by name', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
   seedRepo(dir, { id: 'M0-SCOPE-001', status: 'passing', evidence: [] });
