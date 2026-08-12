@@ -13,7 +13,8 @@
   detail. Each `verification` entry must be an actually runnable command or an explicit
   manual check.
 - Each feature's `source_refs` must point at the ADR or requirements section that
-  justifies it — this is checked by the stage-gate validator.
+  justifies it, and at the specific `US-N.AC-N` acceptance criterion it satisfies rather
+  than the story as a whole — this is checked by the stage-gate validator.
 - Use `npx sdlc-harness new-feature` to append entries with the required shape.
 
 ## Required Output Artifacts
