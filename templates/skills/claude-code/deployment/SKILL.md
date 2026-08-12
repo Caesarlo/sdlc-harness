@@ -1,5 +1,5 @@
 ---
-name: sdlc-deployment
+name: deployment
 description: Use when preparing to deploy a milestone in an sdlc-harness project — stage 8, release checklist and the RELEASE gate feature.
 ---
 

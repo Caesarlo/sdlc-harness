@@ -1,5 +1,5 @@
 ---
-name: sdlc-user-stories
+name: user-stories
 description: Use when writing or refining user stories in an sdlc-harness project — stage 3, requires explicit acceptance criteria.
 ---
 

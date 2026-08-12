@@ -1,5 +1,5 @@
 ---
-name: sdlc-agile-tdd
+name: agile-tdd
 description: Use when implementing a feature in an sdlc-harness project — stage 6, isolated TDD split plus the review gate.
 ---
 

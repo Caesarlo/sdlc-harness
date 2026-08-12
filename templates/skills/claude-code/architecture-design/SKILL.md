@@ -1,5 +1,5 @@
 ---
-name: sdlc-architecture-design
+name: architecture-design
 description: Use when making architecture or technical-design decisions in an sdlc-harness project — stage 2, produces ADRs.
 ---
 

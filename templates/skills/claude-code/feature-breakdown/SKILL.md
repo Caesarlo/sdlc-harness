@@ -1,5 +1,5 @@
 ---
-name: sdlc-feature-breakdown
+name: feature-breakdown
 description: Use when turning approved user stories into feature_list.json entries in an sdlc-harness project — stage 4.
 ---
 

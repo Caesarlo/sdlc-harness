@@ -1,5 +1,5 @@
 ---
-name: sdlc-self-acceptance
+name: self-acceptance
 description: Use when closing out a milestone in an sdlc-harness project — stage 7, full verification plus an end-to-end check.
 ---
 

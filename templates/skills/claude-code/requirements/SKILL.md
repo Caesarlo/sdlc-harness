@@ -1,5 +1,5 @@
 ---
-name: sdlc-requirements
+name: requirements
 description: Use when starting or refining requirements for a project using sdlc-harness — stage 1 of the requirements-to-deployment workflow.
 ---
 

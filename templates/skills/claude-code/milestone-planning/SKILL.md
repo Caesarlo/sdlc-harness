@@ -1,5 +1,5 @@
 ---
-name: sdlc-milestone-planning
+name: milestone-planning
 description: Use when grouping features into ordered milestones in an sdlc-harness project — stage 5.
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: sdlc-observability-feedback
+name: observability-feedback
 description: Use after deploying in an sdlc-harness project — stage 9, logging feedback and feeding it back into requirements.
 ---
 
