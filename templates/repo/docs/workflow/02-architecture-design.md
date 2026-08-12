@@ -25,7 +25,9 @@
 
 ## Required Output Artifacts
 - One or more `docs/adr/NNNN-*.md` files, each indexed in `docs/adr/README.md`.
-- An architecture overview doc if the project has more than a handful of components.
+- `docs/architecture/overview.md` if the project has more than a handful of components,
+  using `docs/architecture/overview-template.md` as the shape (components, data flow,
+  key dependencies, links to the ADRs that explain each decision).
 
 ## Exit Conditions
 - `npx sdlc-harness validate` reports no `adr-coverage` errors for the topics configured
