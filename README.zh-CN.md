@@ -1,18 +1,22 @@
 <p align="center">
-  <img src="docs/assets/sdlc-harness-icon.png" alt="sdlc-harness 软件生命周期图标" width="220">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/sdlc-harness-banner-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/sdlc-harness-banner-light.png">
+    <img src="docs/assets/sdlc-harness-banner-light.png" alt="包含分支路径和验证检查点的软件开发生命周期" width="100%">
+  </picture>
 </p>
 
 <h1 align="center">sdlc-harness</h1>
 
 <p align="center">
-  <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.0-4c1.svg" alt="版本 0.1.0"></a>
-  <a href="package.json"><img src="https://img.shields.io/badge/Node.js-%3E%3D20-339933.svg?logo=nodedotjs&logoColor=white" alt="Node.js 20 或更高版本"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT 许可证"></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.0-f59e0b?style=flat-square&labelColor=262626" alt="版本 0.1.0"></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/Node.js-%3E%3D20-339933?style=flat-square&logo=nodedotjs&logoColor=white&labelColor=262626" alt="Node.js 20 或更高版本"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2563eb?style=flat-square&labelColor=262626" alt="MIT 许可证"></a>
 </p>
 
 <p align="center">
-  <a href="README.md"><img src="https://img.shields.io/badge/README-English-2563eb.svg" alt="Read in English"></a>
-  <a href="README.zh-CN.md"><img src="https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-dc2626.svg" alt="阅读简体中文版本"></a>
+  <a href="README.md"><img src="https://img.shields.io/badge/README-English-6b7280?style=flat-square&labelColor=262626" alt="Read in English"></a>
+  <a href="README.zh-CN.md"><img src="https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-2563eb?style=flat-square&labelColor=262626" alt="阅读简体中文版本"></a>
 </p>
 
 <p align="center">
@@ -22,6 +26,14 @@
 <p align="center">
   面向编码 Agent 的仓库原生<strong>软件开发生命周期</strong>（Software Development Life Cycle，SDLC）治理工具。
 </p>
+
+<p align="center">
+  <a href="#快速开始">快速开始</a> &nbsp;&middot;&nbsp;
+  <a href="#完整-sdlc-工作流">工作流</a> &nbsp;&middot;&nbsp;
+  <a href="#命令">命令</a>
+</p>
+
+<p align="center"><code>npx sdlc-harness adopt</code></p>
 
 **软件开发生命周期**（Software Development Life Cycle，SDLC）是软件从需求与架构设计，经过
 实现、验证和部署，再到上线后反馈的完整过程。`sdlc-harness` 将这套过程转化为一套安装在代码
@@ -50,6 +62,9 @@ Claude Code 还会获得轻量的 skill 包装，方便发现和调用各个阶�
 
 需要 **Node.js 20 或更高版本**。
 
+> [!TIP]
+> `adopt` 只创建缺失文件，不会覆盖已有文件；被跳过的文件会列出来供你手动检查。
+
 ### 添加到已有仓库
 
 ```bash
@@ -59,8 +74,6 @@ git config core.hooksPath .githooks
 npx sdlc-harness validate
 npx sdlc-harness status
 ```
-
-`adopt` 只写入缺失文件，不会覆盖已有文件；被跳过的文件会列出来供你手动检查。
 
 ### 在空仓库中开始
 
@@ -184,6 +197,10 @@ flowchart LR
 
 运行 `init` 或 `adopt` 后，仓库中会包含：
 
+<details>
+<summary><strong>查看生成的文件和 Git hook 配置</strong></summary>
+
+
 ```text
 AGENTS.md                    # 启动、路由、功能和会话规则
 feature_list.json            # 里程碑、功能、依赖、状态和证据
@@ -203,6 +220,8 @@ docs/
 ```bash
 git config core.hooksPath .githooks
 ```
+
+</details>
 
 ## 命令
 

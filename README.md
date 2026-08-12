@@ -1,18 +1,22 @@
 <p align="center">
-  <img src="docs/assets/sdlc-harness-icon.png" alt="sdlc-harness lifecycle graph icon" width="220">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/sdlc-harness-banner-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/sdlc-harness-banner-light.png">
+    <img src="docs/assets/sdlc-harness-banner-light.png" alt="A connected software-development lifecycle with branching paths and verification checkpoints" width="100%">
+  </picture>
 </p>
 
 <h1 align="center">sdlc-harness</h1>
 
 <p align="center">
-  <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.0-4c1.svg" alt="Version 0.1.0"></a>
-  <a href="package.json"><img src="https://img.shields.io/badge/Node.js-%3E%3D20-339933.svg?logo=nodedotjs&logoColor=white" alt="Node.js 20 or newer"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.0-f59e0b?style=flat-square&labelColor=262626" alt="Version 0.1.0"></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/Node.js-%3E%3D20-339933?style=flat-square&logo=nodedotjs&logoColor=white&labelColor=262626" alt="Node.js 20 or newer"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2563eb?style=flat-square&labelColor=262626" alt="MIT License"></a>
 </p>
 
 <p align="center">
-  <a href="README.md"><img src="https://img.shields.io/badge/README-English-2563eb.svg" alt="Read in English"></a>
-  <a href="README.zh-CN.md"><img src="https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-dc2626.svg" alt="阅读简体中文版本"></a>
+  <a href="README.md"><img src="https://img.shields.io/badge/README-English-2563eb?style=flat-square&labelColor=262626" alt="Read in English"></a>
+  <a href="README.zh-CN.md"><img src="https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-6b7280?style=flat-square&labelColor=262626" alt="阅读简体中文版本"></a>
 </p>
 
 <p align="center">
@@ -23,6 +27,14 @@
   Repository-native governance for the <strong>Software Development Life Cycle (SDLC)</strong>,
   built for coding agents.
 </p>
+
+<p align="center">
+  <a href="#quickstart">Quickstart</a> &nbsp;&middot;&nbsp;
+  <a href="#the-full-sdlc-workflow">Workflow</a> &nbsp;&middot;&nbsp;
+  <a href="#commands">Commands</a>
+</p>
+
+<p align="center"><code>npx sdlc-harness adopt</code></p>
 
 The **Software Development Life Cycle (SDLC)** is the complete process through which software
 moves from requirements and architecture to implementation, verification, deployment, and
@@ -52,6 +64,10 @@ that can reject inconsistent state.
 
 Requires **Node.js 20 or later**.
 
+> [!TIP]
+> `adopt` creates only missing files. Existing files stay untouched and are listed for manual
+> review.
+
 ### Add it to an existing repository
 
 ```bash
@@ -61,9 +77,6 @@ git config core.hooksPath .githooks
 npx sdlc-harness validate
 npx sdlc-harness status
 ```
-
-`adopt` writes only missing files. Existing files are left untouched and reported for manual
-review.
 
 ### Start in an empty repository
 
@@ -190,6 +203,10 @@ dependencies, evidence records, source references, milestone order, and configur
 
 After `init` or `adopt`, the repository contains:
 
+<details>
+<summary><strong>Show the generated files and hook setup</strong></summary>
+
+
 ```text
 AGENTS.md                    # startup, routing, feature, and session rules
 feature_list.json            # milestones, features, dependencies, status, and evidence
@@ -209,6 +226,8 @@ The generated pre-commit hook is intentionally inactive until you configure it o
 ```bash
 git config core.hooksPath .githooks
 ```
+
+</details>
 
 ## Commands
 
