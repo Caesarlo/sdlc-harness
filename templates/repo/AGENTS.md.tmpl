@@ -1,0 +1,48 @@
+# AGENTS.md
+
+This repository uses **sdlc-harness**: every phase from raw requirements to deployment
+and post-release feedback is tracked as machine-readable state in this repo, not as
+chat history. Read this file before doing any implementation work.
+
+## Startup Workflow
+
+1. Confirm the repository root.
+2. If `git config core.hooksPath` is not yet `.githooks`, run `git config core.hooksPath .githooks` once.
+3. Run `npx sdlc-harness validate`. It must exit 0 before any other step; if it fails,
+   fixing `feature_list.json` (or the docs it depends on) is the narrow task for this
+   session.
+4. Run `npx sdlc-harness status` to see the active feature and milestone.
+5. Read `progress.md`, especially the latest session entry.
+6. Read the active feature's `source_refs` in `feature_list.json`.
+7. Continue the active feature, or pick the highest-priority `not_started` feature whose
+   dependencies are all `passing`.
+8. If the selected feature's id matches `*-SCOPE-001`, its only allowed action is
+   decomposition into session-sized features — never mark it `passing`.
+
+## Routing Map
+
+- `docs/workflow/01-requirements.md` — capture and refine raw requirements
+- `docs/workflow/02-architecture-design.md` — architecture decisions and ADRs
+- `docs/workflow/03-user-stories.md` — user stories with acceptance criteria
+- `docs/workflow/04-feature-breakdown.md` — turning stories into feature_list.json entries
+- `docs/workflow/05-milestone-planning.md` — grouping features into ordered milestones
+- `docs/workflow/06-agile-tdd.md` — isolated TDD workflow and the review gate
+- `docs/workflow/07-self-acceptance.md` — what counts as done
+- `docs/workflow/08-deployment.md` — release checklist and deploy templates
+- `docs/workflow/09-observability-feedback.md` — closing the loop back to requirements
+
+## Feature Rules
+
+- Only one feature may be `in_progress` at a time.
+- A feature may become `passing` only after its declared verification has run
+  successfully, evidence is recorded, and an evidence entry with `kind: "review"` exists.
+- `feature_list.json` is validated by `npx sdlc-harness validate` — do not hand-edit
+  around a failing check.
+- If new required work is discovered, add a new feature; do not leave an untracked TODO.
+
+## End Of Session
+
+1. Run `npx sdlc-harness validate` and `npx sdlc-harness status`.
+2. Append a checkpoint to `progress.md`: what changed, verification performed, evidence,
+   next action.
+3. Confirm no more than one feature is `in_progress`.
