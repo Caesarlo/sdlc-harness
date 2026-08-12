@@ -14,7 +14,8 @@
         "passing_requires_evidence": { "type": "boolean" },
         "do_not_skip_verification": { "type": "boolean" },
         "feature_should_fit_one_session": { "type": "boolean" },
-        "passing_is_monotonic": { "type": "boolean" }
+        "passing_is_monotonic": { "type": "boolean" },
+        "dependencies_must_be_passing_before_start": { "type": "boolean" }
       }
     },
     "rule_exceptions": { "type": "object" },

@@ -4,6 +4,7 @@ import { loadConfig } from '../lib/config.js';
 import { validateStructural } from '../validators/structural.js';
 import { validateDependencyCycles } from '../validators/dependency-cycles.js';
 import { validatePassGate } from '../validators/pass-gate.js';
+import { validateDependencyReadiness } from '../validators/dependency-readiness.js';
 import { validateMilestoneOrder } from '../validators/milestone-order.js';
 import { validateAdrCoverage } from '../validators/adr-coverage.js';
 import { validateStageGate } from '../validators/stage-gate.js';
@@ -40,6 +41,7 @@ export function runValidate(repoRoot) {
     ['structural', structuralResult],
     ['dependency-cycles', validateDependencyCycles(data)],
     ['pass-gate', validatePassGate(data, previousSnapshot)],
+    ['dependency-readiness', validateDependencyReadiness(data)],
     ['milestone-order', validateMilestoneOrder(data)],
     ['adr-coverage', validateAdrCoverage(config, path.join(repoRoot, 'docs', 'adr'))],
     ['stage-gate', validateStageGate(data, repoRoot)],

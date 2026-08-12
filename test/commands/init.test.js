@@ -7,6 +7,7 @@ import { runInit } from '../../src/commands/init.js';
 import { validateStructural } from '../../src/validators/structural.js';
 import { validateDependencyCycles } from '../../src/validators/dependency-cycles.js';
 import { validatePassGate } from '../../src/validators/pass-gate.js';
+import { validateDependencyReadiness } from '../../src/validators/dependency-readiness.js';
 import { validateMilestoneOrder } from '../../src/validators/milestone-order.js';
 import { validateStageGate } from '../../src/validators/stage-gate.js';
 
@@ -49,6 +50,7 @@ test('the freshly-initialized feature_list.json passes every validator', () => {
     validateStructural(data),
     validateDependencyCycles(data),
     validatePassGate(data, null),
+    validateDependencyReadiness(data),
     validateMilestoneOrder(data),
     validateStageGate(data, dir),
   ]) {
