@@ -38,7 +38,3 @@ at it once: `git config core.hooksPath .githooks`.
 9. Observability & Feedback Loop (closes back to stage 1)
 
 Each stage's full guide lives in `docs/workflow/0N-*.md` once you run `init`/`adopt`.
-
-## Design
-
-See `docs/superpowers/specs/2026-08-11-sdlc-harness-design.md` for the full design spec.
