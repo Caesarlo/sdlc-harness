@@ -3,3 +3,5 @@ node_modules/
 docs/superpowers/
 .worktrees/
 .superpowers/
+.codegraph/
+.cursor/rules/codegraph.mdc
