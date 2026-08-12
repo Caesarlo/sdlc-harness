@@ -1,0 +1,51 @@
+{
+  "project": "{{projectName}}",
+  "schema_version": "1.0",
+  "last_updated": "",
+  "rules": {
+    "single_active_feature": true,
+    "passing_requires_evidence": true,
+    "do_not_skip_verification": true,
+    "feature_should_fit_one_session": true,
+    "passing_is_monotonic": true
+  },
+  "rule_exceptions": {
+    "feature_should_fit_one_session": "Features matching *-SCOPE-001 or *-RELEASE-001 are planning-only placeholders: they exist to be decomposed before implementation and must never be marked passing themselves."
+  },
+  "status_legend": {
+    "not_started": "Work has not begun.",
+    "in_progress": "This is the only active implementation task.",
+    "blocked": "A documented blocker prevents progress.",
+    "passing": "Required behavior and verification have passed with evidence, including a review evidence entry."
+  },
+  "milestones": [
+    {
+      "id": "M0",
+      "title": "Harness bootstrap",
+      "objective": "Establish the requirements-to-deployment harness for this project."
+    }
+  ],
+  "features": [
+    {
+      "id": "M0-HARNESS-SCOPE-001",
+      "milestone": "M0",
+      "area": "planning",
+      "title": "Decompose the first real milestone",
+      "behavior": "This placeholder is replaced by session-sized features once the requirements (stage 1) and architecture (stage 2) docs exist for this project's first milestone.",
+      "status": "not_started",
+      "dependencies": [],
+      "verification": [
+        {
+          "type": "manual",
+          "command": "Confirm this id no longer appears with any status other than not_started once decomposed.",
+          "expected": "Replaced by concrete features before implementation begins."
+        }
+      ],
+      "evidence": [],
+      "source_refs": ["docs/workflow/05-milestone-planning.md"],
+      "implementation": { "files": [], "commits": [] },
+      "blocker": null,
+      "notes": ""
+    }
+  ]
+}
