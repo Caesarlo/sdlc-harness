@@ -1,17 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline/promises';
+import { createAsker } from '../lib/prompt.js';
+import { loadFeatureList } from '../lib/load-feature-list.js';
 
 export async function runNewFeature(repoRoot, { input = process.stdin, output = process.stdout } = {}) {
   const featureListPath = path.join(repoRoot, 'feature_list.json');
-  const data = JSON.parse(fs.readFileSync(featureListPath, 'utf8'));
+  const data = loadFeatureList(repoRoot);
   const rl = readline.createInterface({ input, output });
-  const lines = rl[Symbol.asyncIterator]();
-  const ask = async (prompt) => {
-    output.write(prompt);
-    const { value, done } = await lines.next();
-    return done ? '' : value;
-  };
+  const ask = createAsker(rl, output);
 
   try {
     const id = (await ask('Feature id: ')).trim();

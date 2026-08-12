@@ -1,8 +1,7 @@
-import fs from 'node:fs';
-import path from 'node:path';
+import { loadFeatureList } from '../lib/load-feature-list.js';
 
 export function runStatus(repoRoot) {
-  const data = JSON.parse(fs.readFileSync(path.join(repoRoot, 'feature_list.json'), 'utf8'));
+  const data = loadFeatureList(repoRoot);
 
   const counts = { not_started: 0, in_progress: 0, blocked: 0, passing: 0 };
   for (const feature of data.features) {
