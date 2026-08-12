@@ -18,3 +18,6 @@ export function assertStageDocShape(fileName) {
 test('01-requirements.md has the required stage-doc shape', () => assertStageDocShape('01-requirements.md'));
 test('02-architecture-design.md has the required stage-doc shape', () => assertStageDocShape('02-architecture-design.md'));
 test('03-user-stories.md has the required stage-doc shape', () => assertStageDocShape('03-user-stories.md'));
+test('04-feature-breakdown.md has the required stage-doc shape', () => assertStageDocShape('04-feature-breakdown.md'));
+test('05-milestone-planning.md has the required stage-doc shape', () => assertStageDocShape('05-milestone-planning.md'));
+test('06-agile-tdd.md has the required stage-doc shape', () => assertStageDocShape('06-agile-tdd.md'));
