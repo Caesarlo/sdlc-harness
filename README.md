@@ -269,6 +269,10 @@ All claim commands accept `--owner <name>` (defaults to `harness.config.json`'s 
 
 `sdlc-harness claim <feature-id> --push` commits the claim and pushes it (`--remote`/`--branch`, default `origin`/`main`). Git has no real-time cross-machine lock, so two machines can each claim locally before either has seen the other's push — the actual conflict only surfaces when the second one tries to push. `--push` detects that rejection, discards the losing local commit, resyncs with the remote, and automatically falls back to the next ready feature and pushes that instead, rather than leaving you with a claim that can never reach the remote.
 
+### GitHub provider check
+
+`sdlc-harness provider github check [--owner <o>] [--repo <r>] [--branch <b>]` (owner/repo inferred from the `origin` remote if omitted) checks branch protection, required status checks, force-push blocking, `CODEOWNERS`, and rulesets via `gh api`. Checks that need admin-level access (branch protection detail, rulesets) report `unknown` rather than `fail` when the token can't see them — a normal developer token can still use this without every check erroring out.
+
 ### Solo vs. team mode
 
 `harness.config.json`'s `collaborationMode` controls whether claim/lease is visible:

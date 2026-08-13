@@ -13,6 +13,7 @@ import {
 } from './lib/claims.js';
 import { createWorkspace, removeWorkspace, pruneWorkspaces, listWorkspaces } from './lib/worktree.js';
 import { claimAndPush } from './lib/git-provider.js';
+import { checkGithubRepoConfig, inferGithubRepoFromRemote } from './lib/github-provider.js';
 
 const [, , command, ...rest] = process.argv;
 const cwd = process.cwd();
@@ -249,6 +250,45 @@ async function main() {
         console.error(err.message);
         process.exitCode = 1;
         return;
+      }
+      break;
+    }
+    case 'provider': {
+      if (rest[0] !== 'github' || rest[1] !== 'check') {
+        console.error('Usage: sdlc-harness provider github check [--owner <o>] [--repo <r>] [--branch <b>]');
+        process.exitCode = 1;
+        return;
+      }
+      const args = rest.slice(2);
+      const flagValue = (name) => {
+        const idx = args.indexOf(name);
+        return idx >= 0 ? args[idx + 1] : null;
+      };
+      let owner = flagValue('--owner');
+      let repo = flagValue('--repo');
+      const branch = flagValue('--branch') || 'main';
+
+      if (!owner || !repo) {
+        const inferred = inferGithubRepoFromRemote(cwd);
+        if (!inferred) {
+          console.error('Could not infer owner/repo from git remote "origin" — pass --owner and --repo explicitly.');
+          process.exitCode = 1;
+          return;
+        }
+        owner = owner || inferred.owner;
+        repo = repo || inferred.repo;
+      }
+
+      const result = checkGithubRepoConfig(owner, repo, { branch });
+      for (const finding of result.findings) {
+        const label = { pass: 'PASS', fail: 'FAIL', unknown: 'UNKNOWN' }[finding.status];
+        console.log(`[${label}] ${finding.check}: ${finding.detail}`);
+      }
+      if (result.degraded) {
+        console.log('Some checks could not be verified with this token (need admin access) — treated as warnings, not failures.');
+      }
+      if (!result.ok) {
+        process.exitCode = 1;
       }
       break;
     }
