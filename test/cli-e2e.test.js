@@ -54,3 +54,30 @@ test('new-feature with a duplicate id exits non-zero with a clean error, not a r
   }
   assert.equal(threw, true);
 });
+
+test('verify runs the declared command via the CLI binary, exits non-zero on failure, and records real evidence', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  const featureListPath = path.join(dir, 'feature_list.json');
+  fs.writeFileSync(featureListPath, JSON.stringify({
+    project: 'demo', schema_version: '1.0', milestones: [{ id: 'M0' }],
+    features: [{
+      id: 'M0-FEAT-001', milestone: 'M0', dependencies: [],
+      verification: [{ type: 'automated', command: 'node -e "process.exit(1)"', expected: 'exit 0' }],
+      evidence: [],
+    }],
+  }));
+
+  let threw = false;
+  try {
+    execFileSync('node', [CLI, 'verify', 'M0-FEAT-001'], { cwd: dir });
+  } catch (err) {
+    threw = true;
+    assert.notEqual(err.status, 0);
+  }
+  assert.equal(threw, true);
+
+  const saved = JSON.parse(fs.readFileSync(featureListPath, 'utf8'));
+  assert.equal(saved.features[0].evidence.length, 1);
+  assert.equal(saved.features[0].evidence[0].result, 'failed');
+  assert.equal(saved.features[0].evidence[0].kind, 'test');
+});

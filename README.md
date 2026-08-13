@@ -248,6 +248,7 @@ git config core.hooksPath .githooks
 | `sdlc-harness status`        | Print milestone counts, feature counts, and the active feature as JSON. |
 | `sdlc-harness new-feature`   | Interactively append a new feature to`feature_list.json`.             |
 | `sdlc-harness new-milestone` | Interactively append a new milestone to`feature_list.json`.           |
+| `sdlc-harness verify <feature-id>` | Actually run a feature's declared verification commands and record real pass/fail evidence (with exit code and commit sha) — the only supported way to add "test" evidence. |
 
 ## Agent compatibility
 
