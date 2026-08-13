@@ -2,14 +2,9 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { readJsonWithStamp, writeJsonCas, RevisionConflictError } from '../lib/atomic-write.js';
 import { appendEvent } from '../lib/events.js';
+import { FeatureNotFoundError } from '../lib/errors.js';
 
-export class FeatureNotFoundError extends Error {
-  constructor(featureId) {
-    super(`Feature not found: ${featureId}`);
-    this.name = 'FeatureNotFoundError';
-    this.featureId = featureId;
-  }
-}
+export { FeatureNotFoundError };
 
 function currentCommitSha(repoRoot) {
   const result = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' });

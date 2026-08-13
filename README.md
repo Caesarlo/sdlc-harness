@@ -249,6 +249,13 @@ git config core.hooksPath .githooks
 | `sdlc-harness new-feature`   | Interactively append a new feature to`feature_list.json`.             |
 | `sdlc-harness new-milestone` | Interactively append a new milestone to`feature_list.json`.           |
 | `sdlc-harness verify <feature-id>` | Actually run a feature's declared verification commands and record real pass/fail evidence (with exit code and commit sha) — the only supported way to add "test" evidence. |
+| `sdlc-harness claim <feature-id>` | Atomically claim a feature (sets `owner`, moves `not_started` → `in_progress`), subject to the owner's WIP limit. |
+| `sdlc-harness claim --next` | Atomically claim the highest-priority ready feature (not started, dependencies passing, unclaimed). |
+| `sdlc-harness claim renew <feature-id>` | Extend a claim's lease before it expires. |
+| `sdlc-harness claim <feature-id> --takeover-expired` | Take over a claim whose lease has expired. |
+| `sdlc-harness release <feature-id>` | Release a claim (reverts `in_progress` back to `not_started`). |
+
+All claim commands accept `--owner <name>` (defaults to `harness.config.json`'s `defaultOwner`), `--actor <id>` (distinguishes multiple Agent sessions run by the same owner — claim uniqueness is always per-feature, never per-actor), and `--ttl <minutes>` (lease length, default 120).
 
 ## Agent compatibility
 

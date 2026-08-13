@@ -8,7 +8,7 @@ const README_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), '..'
 
 test('README documents every CLI command', () => {
   const content = fs.readFileSync(README_PATH, 'utf8');
-  for (const command of ['init', 'adopt', 'validate', 'status', 'new-feature', 'new-milestone', 'verify']) {
+  for (const command of ['init', 'adopt', 'validate', 'status', 'new-feature', 'new-milestone', 'verify', 'claim', 'release']) {
     assert.match(content, new RegExp(`sdlc-harness ${command}`));
   }
 });

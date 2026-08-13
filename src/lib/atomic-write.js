@@ -53,3 +53,27 @@ export function writeJsonCas(filePath, data, expectedStamp) {
     throw err;
   }
 }
+
+// Reads filePath, runs `mutateFn(data)` against it, and writes the result
+// back via CAS — retrying by re-reading fresh data and re-running mutateFn
+// whenever a RevisionConflictError happens, up to maxAttempts times. This
+// matters beyond a naive "retry the same write": mutateFn must re-derive its
+// decision from the fresh data each attempt (e.g. re-checking "is this
+// already claimed?"), not blindly reapply a stale mutation, since the
+// conflicting writer may have changed the very thing the decision depends
+// on. Any error mutateFn throws that isn't a RevisionConflictError propagates
+// immediately without retrying — it's a domain rejection, not a race.
+export function casTransaction(filePath, mutateFn, { maxAttempts = 5 } = {}) {
+  let attempt = 0;
+  for (;;) {
+    attempt += 1;
+    const { data, stamp } = readJsonWithStamp(filePath);
+    const result = mutateFn(data);
+    try {
+      writeJsonCas(filePath, data, stamp);
+      return result;
+    } catch (err) {
+      if (!(err instanceof RevisionConflictError) || attempt >= maxAttempts) throw err;
+    }
+  }
+}

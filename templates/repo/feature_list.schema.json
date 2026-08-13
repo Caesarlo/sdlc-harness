@@ -51,6 +51,19 @@
             "type": "string",
             "description": "Agent or developer this feature is assigned to. Features with no owner share one implicit bucket, so a repo that never sets owner keeps the old single-active-feature behavior."
           },
+          "claim": {
+            "type": ["object", "null"],
+            "description": "Set by `sdlc-harness claim`; cleared by `sdlc-harness release`. Not meant to be hand-edited.",
+            "properties": {
+              "id": { "type": "string" },
+              "owner": { "type": "string" },
+              "actor_id": { "type": "string", "description": "Distinguishes a specific Agent session from the owner (person) it belongs to, so one person running multiple Agents doesn't collide with themselves." },
+              "claimed_at": { "type": "string" },
+              "lease_until": { "type": "string" },
+              "heartbeat_at": { "type": "string" },
+              "taken_over_from": { "type": "string" }
+            }
+          },
           "risk": {
             "enum": ["low", "medium", "high"],
             "description": "Informational signal for which upstream stages (architecture, user stories, milestone planning) are worth doing in full before implementation. Not enforced by validate."

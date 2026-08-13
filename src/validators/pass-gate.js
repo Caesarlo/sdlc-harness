@@ -1,12 +1,6 @@
-const PLACEHOLDER_PATTERN = /-(SCOPE|RELEASE)-\d+$/;
-const DEFAULT_OWNER_BUCKET = '_default';
+import { resolveWipLimit, DEFAULT_OWNER_BUCKET } from '../lib/wip-limit.js';
 
-function resolveWipLimit(rules) {
-  if (!rules) return 1;
-  if (typeof rules.wip_limit_per_owner === 'number') return rules.wip_limit_per_owner;
-  if (rules.single_active_feature === false) return Infinity;
-  return 1;
-}
+const PLACEHOLDER_PATTERN = /-(SCOPE|RELEASE)-\d+$/;
 
 export function validatePassGate(data, previousSnapshot) {
   const errors = [];

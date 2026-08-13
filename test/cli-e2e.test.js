@@ -81,3 +81,39 @@ test('verify runs the declared command via the CLI binary, exits non-zero on fai
   assert.equal(saved.features[0].evidence[0].result, 'failed');
   assert.equal(saved.features[0].evidence[0].kind, 'test');
 });
+
+test('claim, release, and claim --next work end-to-end via the CLI binary', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  fs.writeFileSync(path.join(dir, 'harness.config.json'), JSON.stringify({ defaultOwner: 'agent' }));
+  fs.writeFileSync(path.join(dir, 'feature_list.json'), JSON.stringify({
+    project: 'demo', schema_version: '1.0', rules: { wip_limit_per_owner: 1 }, milestones: [{ id: 'M0' }],
+    features: [
+      { id: 'M0-FEAT-001', milestone: 'M0', dependencies: [], verification: [], evidence: [], status: 'not_started' },
+    ],
+  }));
+
+  const claimOut = execFileSync('node', [CLI, 'claim', 'M0-FEAT-001'], { cwd: dir }).toString();
+  assert.match(claimOut, /Claimed M0-FEAT-001 for agent/);
+
+  let saved = JSON.parse(fs.readFileSync(path.join(dir, 'feature_list.json'), 'utf8'));
+  assert.equal(saved.features[0].status, 'in_progress');
+  assert.equal(saved.features[0].claim.owner, 'agent');
+
+  // A second claim on the same already-claimed feature must fail cleanly.
+  let threw = false;
+  try {
+    execFileSync('node', [CLI, 'claim', 'M0-FEAT-001'], { cwd: dir });
+  } catch (err) {
+    threw = true;
+    assert.notEqual(err.status, 0);
+  }
+  assert.equal(threw, true);
+
+  const releaseOut = execFileSync('node', [CLI, 'release', 'M0-FEAT-001'], { cwd: dir }).toString();
+  assert.match(releaseOut, /Released M0-FEAT-001/);
+  saved = JSON.parse(fs.readFileSync(path.join(dir, 'feature_list.json'), 'utf8'));
+  assert.equal(saved.features[0].claim, null);
+
+  const nextOut = execFileSync('node', [CLI, 'claim', '--next'], { cwd: dir }).toString();
+  assert.match(nextOut, /Claimed M0-FEAT-001 for agent/);
+});
