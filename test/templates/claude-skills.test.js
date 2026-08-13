@@ -21,7 +21,10 @@ const EXPECTED = [
 for (const [slug, workflowFile] of EXPECTED) {
   test(`${slug} SKILL.md has frontmatter and points at ${workflowFile}`, () => {
     const content = fs.readFileSync(path.join(SKILLS_ROOT, slug, 'SKILL.md'), 'utf8');
-    assert.match(content, /^---\nname: /);
+    // Tolerate CRLF: a checkout on Windows without .gitattributes honoring
+    // this repo's LF-stored blobs would otherwise fail this exact-\n check
+    // even though the content is correct.
+    assert.match(content, /^---\r?\nname: /);
     assert.match(content, /description: .+/);
     assert.match(content, new RegExp(`docs/workflow/${workflowFile}`));
     const bodyLines = content.split('---').pop().trim().split('\n').length;

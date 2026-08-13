@@ -1,0 +1,5 @@
+# Force LF line endings on checkout regardless of platform or the local/CI
+# runner's core.autocrlf setting — without this, GitHub Actions' windows-latest
+# runner checks LF-stored blobs out as CRLF, which broke a test asserting an
+# exact `\n`-anchored frontmatter format (see claude-skills.test.js).
+* text=auto eol=lf
