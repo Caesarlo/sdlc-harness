@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.0-f59e0b?style=flat-square&labelColor=262626" alt="版本 0.1.0"></a>
-  <a href="package.json"><img src="https://img.shields.io/badge/Node.js-%3E%3D20-339933?style=flat-square&logo=nodedotjs&logoColor=white&labelColor=262626" alt="Node.js 20 或更高版本"></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/Node.js-%3E%3D22-339933?style=flat-square&logo=nodedotjs&logoColor=white&labelColor=262626" alt="Node.js 22 或更高版本"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2563eb?style=flat-square&labelColor=262626" alt="MIT 许可证"></a>
 </p>
 
@@ -60,7 +60,7 @@ Claude Code 还会获得轻量的 skill 包装，方便发现和调用各个阶�
 
 ## 快速开始
 
-需要 **Node.js 20 或更高版本**。
+需要 **Node.js 22 或更高版本**。
 
 > [!TIP]
 > `adopt` 只创建缺失文件，不会覆盖已有文件；被跳过的文件会列出来供你手动检查。
@@ -160,11 +160,17 @@ FAILED with 1 error(s):
 - ADR 覆盖 `harness.config.json` 要求的主题；
 - 非占位功能的 `source_refs` 指向真实文件。
 
-验证成功后，当前功能状态会记录在 `.harness/` 下，供后续验证检测状态倒退。
+验证成功后，当前功能状态会记录在 `.harness/` 下，供后续验证检测状态倒退——`passing_is_monotonic`
+检查优先使用 git 历史（`origin/main`/`main`，或 `$HARNESS_BASE_REF`/`$GITHUB_BASE_REF`）而不是本地
+`.harness/` 快照缓存，这样一次全新的 CI checkout（没有历史快照可比对）也不会让回归 PR 蒙混过关。
+`.harness/` 目录大部分是刻意纳入 Git 追踪的：`events/*.jsonl`（审计日志）和 claim/lease 数据
+（直接嵌在每个功能对象里，位于 `feature_list.json` 中）需要跨机器同步才能支持团队协作。只有
+`.harness/last-validated-features.json`——一份由每次成功 `validate` 重新生成的派生缓存——会被
+gitignore；脚手架生成的 `.gitignore` 就是这么配置的。
 
 > [!IMPORTANT]
-> `validate` 验证的是仓库状态和证据记录。它不会执行功能中声明的验证命令，也不能证明记录的
-> 证据一定真实。你仍然需要在开发流程和 CI 中运行这些命令，然后记录结果。
+> `validate` 验证的是仓库状态和证据记录，它本身不会执行任何命令。真正运行功能声明的验证命令、
+> 并记录真实、不可伪造证据的是 `sdlc-harness verify <feature-id>`——见下方命令表。
 
 ## 完整 SDLC 工作流
 
@@ -216,7 +222,9 @@ progress.md                  # 按会话保存的检查点
 docs/
   adr/                       # 架构决策记录
   workflow/                  # 九个 SDLC 阶段的指南
+.gitignore                   # 只忽略派生的 .harness/ 快照缓存和 .worktrees/
 .githooks/pre-commit         # 提交前运行验证
+.github/workflows/ci.yml     # 运行验证（在真实检查接入之前会主动失败，不会假装通过）
 .github/workflows/deploy.yml # 在生成的部署任务前运行验证
 .claude/skills/              # 可选的 Claude Code 发现包装
 ```
@@ -239,6 +247,52 @@ git config core.hooksPath .githooks
 | `sdlc-harness status`        | 以 JSON 输出里程碑数量、各状态功能数量和当前功能。 |
 | `sdlc-harness new-feature`   | 通过交互问答向`feature_list.json` 添加功能。     |
 | `sdlc-harness new-milestone` | 通过交互问答向`feature_list.json` 添加里程碑。   |
+| `sdlc-harness verify <feature-id>` | 真正运行一个功能声明的验证命令，并记录真实的通过/失败证据（含退出码和 commit sha）——这是添加“测试类”证据唯一支持的方式。 |
+| `sdlc-harness claim <feature-id>` | 原子化地认领一个功能（设置 `owner`，把状态从 `not_started` 推进到 `in_progress`），受 owner 的 WIP 上限约束。 |
+| `sdlc-harness claim --next` | 原子化地认领优先级最高的可认领功能（未开始、依赖已通过、未被占用）。 |
+| `sdlc-harness claim renew <feature-id>` | 在租约过期前续期。 |
+| `sdlc-harness claim <feature-id> --takeover-expired` | 接管一个租约已过期的 claim。 |
+| `sdlc-harness release <feature-id>` | 释放一个 claim（把状态从 `in_progress` 还原为 `not_started`）。 |
+| `sdlc-harness workspace create <feature-id>` | 为一个已认领的功能创建独立的 `git worktree`，分支名为 `feature/<id>`（`--base <branch>`，默认 `main`）。 |
+| `sdlc-harness workspace remove <feature-id>` | 移除一个 workspace。如果存在未提交或未推送的内容会拒绝执行（加 `--force` 强制覆盖）。 |
+| `sdlc-harness workspace prune` | 移除 claim 已释放或已过期的 workspace；有未提交/未推送内容的会跳过并报告，而不是被强制删除。永远不会碰仍在有效 claim 下的 workspace。 |
+| `sdlc-harness workspace status` | 以 JSON 形式列出所有 workspace 及其 claim/磁盘状态。 |
+
+所有 claim 相关命令都支持 `--owner <name>`（默认取 `harness.config.json` 的 `defaultOwner`）、
+`--actor <id>`（用来区分同一个 owner 名下的多个 Agent 会话——claim 的唯一性始终按 feature 判断，
+从不按 actor 判断）、以及 `--ttl <minutes>`（租约时长，默认 120 分钟）。
+
+### 跨机器认领（git provider）
+
+`sdlc-harness claim <feature-id> --push` 会提交 claim 并推送（`--remote`/`--branch`，默认
+`origin`/`main`）。Git 没有实时的跨机器锁，所以两台机器可能都在各自本地成功认领了同一个
+功能——真正的冲突只会在第二次 push 时才暴露出来。`--push` 会检测到这次 push 被拒绝，丢弃
+那个没能推送成功的本地 commit，与远程重新同步，然后自动改为认领 ready 队列里的下一个功能
+并推送，而不是让你手里攥着一个永远推不上去的 claim。
+
+### GitHub provider 检查
+
+`sdlc-harness provider github check [--owner <o>] [--repo <r>] [--branch <b>]`（如果不传
+owner/repo，会尝试从 `origin` 远程推断）通过 `gh api` 检查分支保护、必需状态检查、是否禁止
+强制推送、`CODEOWNERS`、以及 ruleset。需要管理员权限才能查看的检查项（分支保护细节、
+ruleset）在 token 权限不足时会报告 `unknown` 而不是 `fail`——这样普通开发者 token 也能正常
+使用这个命令，不会因为权限问题让所有检查项都报错。
+
+`sdlc-harness evidence import <feature-id> --ci-run <run-id> [--owner <o>] [--repo <r>]`
+从一次 GitHub Actions 运行导入“测试类”证据——但前提是通过 `gh api` 独立确认该次运行确实
+存在、已经完成、且状态为成功。调用方除了 run id 之外，其余信息一律不被信任；仍在运行中、
+已失败、或不存在的 run 会被直接拒绝，且不会写入任何证据。
+
+### Solo 与 Team 模式
+
+`harness.config.json` 的 `collaborationMode` 字段决定 claim/lease 是否对用户可见：
+
+- **`"solo"`**（默认）：你不需要自己运行 `claim`/`release`。`sdlc-harness verify` 会在运行前
+  自动为 `defaultOwner` 认领该功能，运行结束后自动释放，整个过程对用户不可见——底层的
+  CAS/claim 安全机制依然生效，只是从不暴露出来。如果该功能正被另一个 owner 有效认领着，
+  `verify` 仍然会拒绝运行，而不是和对方抢着写 evidence。
+- **`"team"`**：`verify` 从不隐式管理 claim。需要先显式认领一个功能（`sdlc-harness claim
+  <feature-id>` 或 `claim --next`），再运行 `verify`。
 
 ## Agent 兼容性
 

@@ -229,7 +229,9 @@ progress.md                  # session-by-session checkpoints
 docs/
   adr/                       # architecture decision records
   workflow/                  # guides for the nine SDLC stages
+.gitignore                   # ignores only the derived .harness/ snapshot cache and .worktrees/
 .githooks/pre-commit         # runs validation before a commit
+.github/workflows/ci.yml     # validates (and fails closed until real checks are wired in)
 .github/workflows/deploy.yml # validates before the generated deployment job
 .claude/skills/              # optional Claude Code discovery wrappers
 ```
