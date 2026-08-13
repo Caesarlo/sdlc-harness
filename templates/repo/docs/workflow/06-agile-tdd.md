@@ -4,7 +4,12 @@
 - One feature with status `not_started` and all dependencies `passing`.
 
 ## What The Agent Does
-- Mark exactly one feature `in_progress` (the pass-gate validator rejects more than one).
+- Mark exactly one feature `in_progress` per owner (the pass-gate validator rejects more
+  than one `in_progress` feature for the same `owner`).
+- Read `harness.config.json`'s `testStrategy` and follow the matching path below. If the
+  field is absent, `isolated-tdd` is the default.
+
+### `testStrategy: "isolated-tdd"` (default)
 - **Isolated TDD split**, for any feature above trivial complexity:
   1. Dispatch a test-writer subagent with only the feature's `behavior`, `verification`,
      and `source_refs` — not any implementation plan. It writes the failing test(s) and
@@ -27,6 +32,25 @@
      changed, reject the implementer's change and re-dispatch rather than accepting an
      implementation that edited its own tests to pass. Then run the test again and
      confirm GREEN, then run the feature's full declared verification.
+- For trivial features, skip the subagent split; TDD in-session is fine, but the
+  refactor step and review gate below still apply. "Trivial" is limited to features with
+  no branching logic and no external dependency (e.g. a single config value or a pure
+  pass-through) — anything with a conditional, a loop, or an I/O boundary is not trivial
+  and gets the full isolated split.
+
+### `testStrategy: "in-session-tdd"`
+- Write the failing test and the implementation in the same session, in that order
+  (test first, confirm RED, then implement to GREEN). No subagent split is required.
+  Use this when the added isolation cost of separate test-writer/implementer dispatches
+  isn't worth it for the project's size or risk profile.
+
+### `testStrategy: "team-default"`
+- Follow whatever test methodology the project's own contributing docs or CI already
+  enforce (property-based tests, existing regression suite, snapshot tests, etc.).
+  `sdlc-harness` does not prescribe the mechanism here — only the exit conditions below
+  still apply.
+
+## Required Everywhere (regardless of `testStrategy`)
 - **Refactor step (mandatory, not optional)**: once GREEN, look for simplification —
   duplication, unclear naming, structure that will resist the next feature — and
   actually apply it, re-running the tests after each change to confirm they stay GREEN.
@@ -36,12 +60,8 @@
 - **Review gate**: after refactoring, dispatch a reviewer (fresh subagent or the
   controlling session acting in a reviewer role) to check the diff against the
   feature's behavior, plus a security pass. Record the outcome as an `evidence` entry
-  with `kind: "review"` — this is required before the feature can move to `passing`.
-- For trivial features, skip the subagent split; TDD in-session is fine, but the
-  refactor step and review gate still apply. "Trivial" is limited to features with no
-  branching logic and no external dependency (e.g. a single config value or a pure
-  pass-through) — anything with a conditional, a loop, or an I/O boundary is not
-  trivial and gets the full isolated split.
+  with `kind: "review"` — this is required before the feature can move to `passing`,
+  regardless of which `testStrategy` was used to get there.
 
 ## Required Output Artifacts
 - The implementation, its tests, and a review evidence entry recorded on the feature.
