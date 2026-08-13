@@ -9,6 +9,7 @@ import { validateDependencyReadiness } from '../validators/dependency-readiness.
 import { validateMilestoneOrder } from '../validators/milestone-order.js';
 import { validateAdrCoverage } from '../validators/adr-coverage.js';
 import { validateStageGate } from '../validators/stage-gate.js';
+import { readFeatureListAtRef, resolveBaseRef } from '../lib/git-baseline.js';
 
 const SNAPSHOT_RELATIVE_PATH = path.join('.harness', 'last-validated-features.json');
 
@@ -21,17 +22,31 @@ export function runValidate(repoRoot) {
   }
 
   const config = loadConfig(path.join(repoRoot, 'harness.config.json'));
+
+  // The passing_is_monotonic baseline prefers git history over the local
+  // .harness/ snapshot cache: the snapshot is gitignored and doesn't exist
+  // on a fresh CI checkout, so relying on it alone means a regression PR
+  // that deletes/reverts a passing feature would sail through CI with
+  // nothing to compare against. Git history survives a fresh checkout (as
+  // long as it's fetched — see ci.yml.tmpl's fetch-depth: 0), so it's used
+  // whenever a base ref resolves; the local snapshot is the fallback for
+  // plain local development where there may be no git history at all yet.
+  const baseRef = resolveBaseRef(repoRoot);
+  const gitBaseline = baseRef ? readFeatureListAtRef(repoRoot, baseRef) : null;
+
   const snapshotPath = path.join(repoRoot, SNAPSHOT_RELATIVE_PATH);
-  let previousSnapshot = null;
+  let localSnapshot = null;
   if (fs.existsSync(snapshotPath)) {
     try {
-      previousSnapshot = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
+      localSnapshot = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
     } catch {
       // Corrupted/unreadable snapshot is treated as "no previous snapshot" so a
       // damaged cache file doesn't block validation from proceeding.
-      previousSnapshot = null;
+      localSnapshot = null;
     }
   }
+
+  const previousSnapshot = gitBaseline || localSnapshot;
 
   const schemaResult = validateSchema(data, repoRoot);
   if (!schemaResult.ok) {

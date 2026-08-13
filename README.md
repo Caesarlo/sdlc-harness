@@ -244,7 +244,7 @@ git config core.hooksPath .githooks
 | ------------------------------ | ----------------------------------------------------------------------- |
 | `sdlc-harness init`          | Scaffold the complete harness in an empty or new repository.            |
 | `sdlc-harness adopt`         | Add missing harness files without overwriting existing files.           |
-| `sdlc-harness validate`      | Run every structural and governance check; exit non-zero on failure.    |
+| `sdlc-harness validate`      | Run every structural and governance check; exit non-zero on failure. The `passing_is_monotonic` check prefers a git baseline (`origin/main`/`main`, or `$HARNESS_BASE_REF`/`$GITHUB_BASE_REF`) over the local `.harness/` snapshot cache, so a regression PR can't sneak past a fresh CI checkout that has no snapshot to compare against. |
 | `sdlc-harness status`        | Print milestone counts, feature counts, and the active feature as JSON. |
 | `sdlc-harness new-feature`   | Interactively append a new feature to`feature_list.json`.             |
 | `sdlc-harness new-milestone` | Interactively append a new milestone to`feature_list.json`.           |
