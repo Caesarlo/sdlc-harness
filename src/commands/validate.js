@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { loadConfig } from '../lib/config.js';
+import { validateSchema } from '../validators/schema.js';
 import { validateStructural } from '../validators/structural.js';
 import { validateDependencyCycles } from '../validators/dependency-cycles.js';
 import { validatePassGate } from '../validators/pass-gate.js';
@@ -30,6 +31,11 @@ export function runValidate(repoRoot) {
       // damaged cache file doesn't block validation from proceeding.
       previousSnapshot = null;
     }
+  }
+
+  const schemaResult = validateSchema(data, repoRoot);
+  if (!schemaResult.ok) {
+    return { ok: false, errors: schemaResult.errors.map((error) => `[schema] ${error}`) };
   }
 
   const structuralResult = validateStructural(data);

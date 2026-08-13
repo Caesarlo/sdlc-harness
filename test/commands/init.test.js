@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { runInit } from '../../src/commands/init.js';
+import { runInit, InitConflictError } from '../../src/commands/init.js';
 import { validateStructural } from '../../src/validators/structural.js';
 import { validateDependencyCycles } from '../../src/validators/dependency-cycles.js';
 import { validatePassGate } from '../../src/validators/pass-gate.js';
@@ -40,6 +40,28 @@ test('init writes the git hook and CI deploy workflow into dot-directories', () 
   }
   assert.equal(fs.existsSync(path.join(dir, '.github', 'workflows', 'deploy.yml')), true);
   assert.equal(fs.existsSync(path.join(dir, '.github', 'workflows', 'ci.yml')), true);
+});
+
+test('init refuses to overwrite a pre-existing file and reports the conflict', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  fs.writeFileSync(path.join(dir, 'AGENTS.md'), 'do not touch me');
+
+  assert.throws(() => runInit(dir, { projectName: 'demo-project' }), InitConflictError);
+  assert.equal(fs.readFileSync(path.join(dir, 'AGENTS.md'), 'utf8'), 'do not touch me');
+  // Nothing else should have been written either — a conflict aborts the
+  // whole init rather than leaving a half-written skeleton behind.
+  assert.equal(fs.existsSync(path.join(dir, 'feature_list.json')), false);
+});
+
+test('init --force overwrites conflicting files and still writes everything else', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  fs.writeFileSync(path.join(dir, 'AGENTS.md'), 'stale content');
+
+  const written = runInit(dir, { projectName: 'demo-project', force: true });
+
+  assert.ok(written.length > 10);
+  assert.notEqual(fs.readFileSync(path.join(dir, 'AGENTS.md'), 'utf8'), 'stale content');
+  assert.equal(fs.existsSync(path.join(dir, 'feature_list.json')), true);
 });
 
 test('the freshly-initialized feature_list.json passes every validator', () => {

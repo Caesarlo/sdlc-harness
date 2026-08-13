@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { runInit } from './commands/init.js';
+import { runInit, InitConflictError } from './commands/init.js';
 import { runAdopt } from './commands/adopt.js';
 import { runValidate } from './commands/validate.js';
 import { runStatus } from './commands/status.js';
@@ -17,8 +17,20 @@ function printUsage() {
 async function main() {
   switch (command) {
     case 'init': {
-      const written = runInit(cwd);
-      console.log(`Wrote ${written.length} files.`);
+      const force = process.argv.includes('--force');
+      try {
+        const written = runInit(cwd, { force });
+        console.log(`Wrote ${written.length} files.`);
+      } catch (err) {
+        if (err instanceof InitConflictError) {
+          console.error(err.message);
+          console.error('Conflicting files:');
+          for (const conflict of err.conflicts) console.error(`  - ${conflict}`);
+          process.exitCode = 1;
+          return;
+        }
+        throw err;
+      }
       break;
     }
     case 'adopt': {

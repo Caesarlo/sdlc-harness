@@ -66,7 +66,7 @@ test('returns ok:false instead of throwing when feature_list.json is syntactical
   const result = runValidate(dir);
   assert.equal(result.ok, false);
   assert.ok(result.errors.length > 0);
-  assert.ok(result.errors.every((e) => e.startsWith('[structural]')));
+  assert.ok(result.errors.every((e) => e.startsWith('[schema]')));
 });
 
 test('fails and reports errors from a specific validator, prefixed by name', () => {

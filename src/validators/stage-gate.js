@@ -1,5 +1,4 @@
-import fs from 'node:fs';
-import path from 'node:path';
+import { resolveSafeRepoPath } from '../lib/safe-path.js';
 
 const PLACEHOLDER_PATTERN = /-(SCOPE|RELEASE)-\d+$/;
 
@@ -16,9 +15,9 @@ export function validateStageGate(data, repoRoot) {
     }
     for (const ref of refs) {
       const refPath = ref.split('#')[0];
-      const resolved = path.join(repoRoot, refPath);
-      if (!fs.existsSync(resolved)) {
-        errors.push(`Feature ${feature.id} source_ref does not resolve to a file: ${ref}`);
+      const resolved = resolveSafeRepoPath(repoRoot, refPath);
+      if (!resolved) {
+        errors.push(`Feature ${feature.id} source_ref does not resolve to a file inside the repo: ${ref}`);
       }
     }
   }
