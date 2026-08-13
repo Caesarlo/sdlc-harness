@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { readJsonWithStamp, writeJsonCas, RevisionConflictError } from '../lib/atomic-write.js';
+import { appendEvent } from '../lib/events.js';
 
 export class FeatureNotFoundError extends Error {
   constructor(featureId) {
@@ -75,6 +76,14 @@ export function runVerify(repoRoot, featureId, { exec = spawnSync } = {}) {
     applyEvidence(reread.data);
     writeJsonCas(featureListPath, reread.data, reread.stamp);
   }
+
+  appendEvent(repoRoot, {
+    type: 'feature.verified',
+    feature_id: featureId,
+    ok,
+    commit_sha: commitSha,
+    commands: results.map((r) => ({ command: r.command, exit_code: r.exitCode })),
+  });
 
   return { ok, featureId, results };
 }

@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { Readable, Writable } from 'node:stream';
 import { runNewFeature } from '../../src/commands/new-feature.js';
+import { readEvents } from '../../src/lib/events.js';
 
 function scriptedInput(lines) {
   return Readable.from([lines.join('\n') + '\n']);
@@ -60,6 +61,12 @@ test('new-feature appends a schema-valid entry from scripted answers', async () 
   const saved = JSON.parse(fs.readFileSync(path.join(dir, 'feature_list.json'), 'utf8'));
   assert.equal(saved.features.length, 1);
   assert.equal(saved.features[0].id, 'M0-FEAT-002');
+
+  const monthKey = new Date().toISOString().slice(0, 7);
+  const events = readEvents(dir, monthKey);
+  assert.equal(events.length, 1);
+  assert.equal(events[0].type, 'feature.created');
+  assert.equal(events[0].feature_id, 'M0-FEAT-002');
 });
 
 test('new-feature rejects a duplicate id', async () => {

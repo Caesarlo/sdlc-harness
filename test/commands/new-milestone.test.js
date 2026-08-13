@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { Readable, Writable } from 'node:stream';
 import { runNewMilestone } from '../../src/commands/new-milestone.js';
+import { readEvents } from '../../src/lib/events.js';
 
 function scriptedInput(lines) {
   return Readable.from([lines.join('\n') + '\n']);
@@ -27,4 +28,10 @@ test('new-milestone appends a schema-valid entry from scripted answers', async (
 
   const saved = JSON.parse(fs.readFileSync(path.join(dir, 'feature_list.json'), 'utf8'));
   assert.equal(saved.milestones.length, 2);
+
+  const monthKey = new Date().toISOString().slice(0, 7);
+  const events = readEvents(dir, monthKey);
+  assert.equal(events.length, 1);
+  assert.equal(events[0].type, 'milestone.created');
+  assert.equal(events[0].milestone_id, 'M1');
 });

@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { runVerify, FeatureNotFoundError } from '../../src/commands/verify.js';
+import { readEvents } from '../../src/lib/events.js';
 
 function seedRepo(dir, verification) {
   fs.writeFileSync(path.join(dir, 'feature_list.json'), JSON.stringify({
@@ -41,6 +42,13 @@ test('verify runs the real command and records passing evidence with an exit cod
   assert.equal(evidence[0].result, 'passed');
   assert.equal(evidence[0].exit_code, 0);
   assert.ok(evidence[0].recorded_at);
+
+  const monthKey = new Date().toISOString().slice(0, 7);
+  const events = readEvents(dir, monthKey);
+  assert.equal(events.length, 1);
+  assert.equal(events[0].type, 'feature.verified');
+  assert.equal(events[0].feature_id, 'M0-FEAT-001');
+  assert.equal(events[0].ok, true);
 });
 
 test('verify records a failing command as failed evidence and returns ok:false, without throwing', () => {

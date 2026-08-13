@@ -3,6 +3,7 @@ import readline from 'node:readline/promises';
 import { createAsker } from '../lib/prompt.js';
 import { loadFeatureList } from '../lib/load-feature-list.js';
 import { readJsonWithStamp, writeJsonCas, RevisionConflictError } from '../lib/atomic-write.js';
+import { appendEvent } from '../lib/events.js';
 
 export async function runNewFeature(repoRoot, { input = process.stdin, output = process.stdout } = {}) {
   const featureListPath = path.join(repoRoot, 'feature_list.json');
@@ -58,6 +59,7 @@ export async function runNewFeature(repoRoot, { input = process.stdin, output = 
       reread.data.features.push(feature);
       writeJsonCas(featureListPath, reread.data, reread.stamp);
     }
+    appendEvent(repoRoot, { type: 'feature.created', feature_id: feature.id, milestone: feature.milestone });
     return feature;
   } finally {
     rl.close();
