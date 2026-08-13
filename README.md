@@ -273,6 +273,8 @@ All claim commands accept `--owner <name>` (defaults to `harness.config.json`'s 
 
 `sdlc-harness provider github check [--owner <o>] [--repo <r>] [--branch <b>]` (owner/repo inferred from the `origin` remote if omitted) checks branch protection, required status checks, force-push blocking, `CODEOWNERS`, and rulesets via `gh api`. Checks that need admin-level access (branch protection detail, rulesets) report `unknown` rather than `fail` when the token can't see them — a normal developer token can still use this without every check erroring out.
 
+`sdlc-harness evidence import <feature-id> --ci-run <run-id> [--owner <o>] [--repo <r>]` imports "test" evidence from a GitHub Actions run — but only after independently confirming via `gh api` that the run actually exists, completed, and succeeded. Nothing about the run is trusted from the caller besides the run id; a run that's still in progress, failed, or doesn't exist is refused, and no evidence is written.
+
 ### Solo vs. team mode
 
 `harness.config.json`'s `collaborationMode` controls whether claim/lease is visible:

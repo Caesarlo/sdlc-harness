@@ -14,6 +14,7 @@ import {
 import { createWorkspace, removeWorkspace, pruneWorkspaces, listWorkspaces } from './lib/worktree.js';
 import { claimAndPush } from './lib/git-provider.js';
 import { checkGithubRepoConfig, inferGithubRepoFromRemote } from './lib/github-provider.js';
+import { runEvidenceImport } from './commands/evidence-import.js';
 
 const [, , command, ...rest] = process.argv;
 const cwd = process.cwd();
@@ -289,6 +290,52 @@ async function main() {
       }
       if (!result.ok) {
         process.exitCode = 1;
+      }
+      break;
+    }
+    case 'evidence': {
+      if (rest[0] !== 'import') {
+        console.error('Usage: sdlc-harness evidence import <feature-id> --ci-run <run-id> [--owner <o>] [--repo <r>]');
+        process.exitCode = 1;
+        return;
+      }
+      const args = rest.slice(1);
+      const VALUED_FLAGS = new Set(['--ci-run', '--owner', '--repo']);
+      const flags = {};
+      const positional = [];
+      for (let i = 0; i < args.length; i += 1) {
+        const arg = args[i];
+        if (VALUED_FLAGS.has(arg)) flags[arg] = args[(i += 1)];
+        else if (!arg.startsWith('--')) positional.push(arg);
+      }
+      const featureId = positional[0];
+      const runId = flags['--ci-run'];
+      let owner = flags['--owner'];
+      let repo = flags['--repo'];
+
+      if (!featureId || !runId) {
+        console.error('Usage: sdlc-harness evidence import <feature-id> --ci-run <run-id> [--owner <o>] [--repo <r>]');
+        process.exitCode = 1;
+        return;
+      }
+      if (!owner || !repo) {
+        const inferred = inferGithubRepoFromRemote(cwd);
+        if (!inferred) {
+          console.error('Could not infer owner/repo from git remote "origin" — pass --owner and --repo explicitly.');
+          process.exitCode = 1;
+          return;
+        }
+        owner = owner || inferred.owner;
+        repo = repo || inferred.repo;
+      }
+
+      try {
+        const evidence = runEvidenceImport(cwd, featureId, { owner, repo, runId });
+        console.log(`Imported evidence for ${featureId} from CI run ${runId} (commit ${evidence.commit_sha}).`);
+      } catch (err) {
+        console.error(err.message);
+        process.exitCode = 1;
+        return;
       }
       break;
     }
