@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.0-f59e0b?style=flat-square&labelColor=262626" alt="Version 0.1.0"></a>
-  <a href="package.json"><img src="https://img.shields.io/badge/Node.js-%3E%3D20-339933?style=flat-square&logo=nodedotjs&logoColor=white&labelColor=262626" alt="Node.js 20 or newer"></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/Node.js-%3E%3D22-339933?style=flat-square&logo=nodedotjs&logoColor=white&labelColor=262626" alt="Node.js 22 or newer"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2563eb?style=flat-square&labelColor=262626" alt="MIT License"></a>
 </p>
 
@@ -62,7 +62,7 @@ that can reject inconsistent state.
 
 ## Quickstart
 
-Requires **Node.js 20 or later**.
+Requires **Node.js 22 or later**.
 
 > [!TIP]
 > `adopt` creates only missing files. Existing files stay untouched and are listed for manual

@@ -11,14 +11,23 @@ on:
   push:
     branches-ignore: [main]
 
+permissions:
+  contents: read
+
 jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 20
+          node-version: 24
       - run: npx sdlc-harness validate
-      # Add the real lint/type-check/test/build steps for {{projectName}} here.
-      - run: echo "Add lint/test/build steps for {{projectName}} here"
+      # This step intentionally fails until the real lint/type-check/test/build
+      # commands for {{projectName}} are wired in below — a CI workflow that can
+      # go green without ever running a real check is worse than no CI at all.
+      - name: Project verification (placeholder — must be replaced)
+        run: |
+          echo "Project verification command is not configured." >&2
+          echo "Replace this step with real lint/type-check/test/build commands for {{projectName}}." >&2
+          exit 1

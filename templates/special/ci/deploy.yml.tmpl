@@ -9,26 +9,45 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
 jobs:
   validate-harness:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 20
+          node-version: 24
       - run: npx sdlc-harness validate
 
   deploy:
     needs: validate-harness
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: echo "Add the real build/deploy steps for {{projectName}} here"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # These three steps intentionally fail until real deploy/health-check/rollback
+      # commands for {{projectName}} are configured — a deploy workflow that reports
+      # success without ever deploying anything produces a false completion signal.
+      - name: Build & deploy (placeholder — must be replaced)
+        run: |
+          echo "Deploy command is not configured for {{projectName}}." >&2
+          exit 1
       # Post-deploy health check (stage 8): a deployment isn't done until this
       # passes. Replace with a real smoke test / health-endpoint check for the
       # actual deploy target before recording deployment evidence.
-      - run: echo "Add a post-deploy smoke test / health check for {{projectName}} here"
+      - name: Post-deploy health check (placeholder — must be replaced)
+        run: |
+          echo "Post-deploy health check is not configured for {{projectName}}." >&2
+          exit 1
       # Rollback path (stage 8): document or script how to revert this deployment
       # — prefer flipping a feature flag over a redeploy for risky changes.
-      - run: echo "Document the rollback path for {{projectName}} here"
+      - name: Rollback path (placeholder — must be documented)
+        run: |
+          echo "Rollback path is not documented for {{projectName}}." >&2
+          exit 1
