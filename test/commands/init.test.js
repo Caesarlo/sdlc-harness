@@ -50,6 +50,7 @@ test('init writes a .gitignore that ignores only the derived local snapshot, not
 
   const content = fs.readFileSync(gitignorePath, 'utf8');
   assert.match(content, /\.harness\/last-validated-features\.json/);
+  assert.match(content, /^\.worktrees\/\s*$/m);
   // Must not blanket-ignore the whole .harness/ directory — events/ and any
   // future claims/ data need to be trackable for team sync.
   assert.doesNotMatch(content, /^\.harness\/\s*$/m);

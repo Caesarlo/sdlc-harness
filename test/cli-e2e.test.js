@@ -117,3 +117,34 @@ test('claim, release, and claim --next work end-to-end via the CLI binary', () =
   const nextOut = execFileSync('node', [CLI, 'claim', '--next'], { cwd: dir }).toString();
   assert.match(nextOut, /Claimed M0-FEAT-001 for agent/);
 });
+
+test('workspace create/status/remove work end-to-end via the CLI binary against a real git repo', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  execFileSync('git', ['init', '-b', 'main'], { cwd: dir });
+  execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: dir });
+  execFileSync('git', ['config', 'user.name', 'Test'], { cwd: dir });
+
+  fs.writeFileSync(path.join(dir, 'harness.config.json'), JSON.stringify({ defaultOwner: 'agent' }));
+  fs.writeFileSync(path.join(dir, 'feature_list.json'), JSON.stringify({
+    project: 'demo', schema_version: '1.0', rules: { wip_limit_per_owner: 1 }, milestones: [{ id: 'M0' }],
+    features: [{ id: 'M0-FEAT-001', milestone: 'M0', dependencies: [], verification: [], evidence: [], status: 'not_started' }],
+  }));
+  execFileSync('git', ['add', '-A'], { cwd: dir });
+  execFileSync('git', ['commit', '-m', 'initial'], { cwd: dir });
+
+  execFileSync('node', [CLI, 'claim', 'M0-FEAT-001'], { cwd: dir });
+
+  const createOut = execFileSync('node', [CLI, 'workspace', 'create', 'M0-FEAT-001'], { cwd: dir }).toString();
+  assert.match(createOut, /Created workspace for M0-FEAT-001/);
+
+  const worktreePath = path.join(dir, '.worktrees', 'M0-FEAT-001');
+  assert.equal(fs.existsSync(worktreePath), true);
+
+  const statusOut = JSON.parse(execFileSync('node', [CLI, 'workspace', 'status'], { cwd: dir }).toString());
+  assert.equal(statusOut.length, 1);
+  assert.equal(statusOut[0].featureId, 'M0-FEAT-001');
+
+  const removeOut = execFileSync('node', [CLI, 'workspace', 'remove', 'M0-FEAT-001'], { cwd: dir }).toString();
+  assert.match(removeOut, /Removed workspace for M0-FEAT-001/);
+  assert.equal(fs.existsSync(worktreePath), false);
+});

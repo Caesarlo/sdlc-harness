@@ -64,6 +64,17 @@
               "taken_over_from": { "type": "string" }
             }
           },
+          "workspace": {
+            "type": ["object", "null"],
+            "description": "Set by `sdlc-harness workspace create`; cleared by `workspace remove`/`prune`. Not meant to be hand-edited.",
+            "properties": {
+              "branch": { "type": "string" },
+              "path": { "type": "string" },
+              "base_branch": { "type": "string" },
+              "base_commit": { "type": "string" },
+              "created_at": { "type": "string" }
+            }
+          },
           "risk": {
             "enum": ["low", "medium", "high"],
             "description": "Informational signal for which upstream stages (architecture, user stories, milestone planning) are worth doing in full before implementation. Not enforced by validate."

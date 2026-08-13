@@ -5,4 +5,9 @@
 # and is never a source of truth.
 .harness/last-validated-features.json
 
+# Worktree working directories created by `sdlc-harness workspace create`.
+# The branches themselves are ordinary git refs and sync normally; only the
+# local checkout paths are excluded here.
+.worktrees/
+
 node_modules/

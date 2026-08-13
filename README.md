@@ -258,6 +258,10 @@ git config core.hooksPath .githooks
 | `sdlc-harness claim renew <feature-id>` | Extend a claim's lease before it expires. |
 | `sdlc-harness claim <feature-id> --takeover-expired` | Take over a claim whose lease has expired. |
 | `sdlc-harness release <feature-id>` | Release a claim (reverts `in_progress` back to `not_started`). |
+| `sdlc-harness workspace create <feature-id>` | Create an isolated `git worktree` on branch `feature/<id>` for a claimed feature (`--base <branch>`, default `main`). |
+| `sdlc-harness workspace remove <feature-id>` | Remove a workspace. Refuses if it has uncommitted or unpushed work (`--force` to override). |
+| `sdlc-harness workspace prune` | Remove workspaces whose claim has been released or expired; skips (reports) any that are dirty. Never touches a workspace under an active claim. |
+| `sdlc-harness workspace status` | List all workspaces with their claim/on-disk state, as JSON. |
 
 All claim commands accept `--owner <name>` (defaults to `harness.config.json`'s `defaultOwner`), `--actor <id>` (distinguishes multiple Agent sessions run by the same owner — claim uniqueness is always per-feature, never per-actor), and `--ttl <minutes>` (lease length, default 120).
 

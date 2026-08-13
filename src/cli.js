@@ -11,13 +11,14 @@ import { loadConfig } from './lib/config.js';
 import {
   claimFeature, claimNextFeature, releaseFeature, renewClaim, takeoverExpiredClaim,
 } from './lib/claims.js';
+import { createWorkspace, removeWorkspace, pruneWorkspaces, listWorkspaces } from './lib/worktree.js';
 
 const [, , command, ...rest] = process.argv;
 const cwd = process.cwd();
 
 function printUsage() {
   console.error(`Unknown command: ${command ?? '(none)'}`);
-  console.error('Usage: sdlc-harness <init|adopt|validate|status|new-feature|new-milestone|verify|claim|release>');
+  console.error('Usage: sdlc-harness <init|adopt|validate|status|new-feature|new-milestone|verify|claim|release|workspace>');
 }
 
 function parseClaimArgs(args) {
@@ -173,6 +174,55 @@ async function main() {
       try {
         releaseFeature(cwd, featureId, { owner: resolveOwner(flags.owner) });
         console.log(`Released ${featureId}.`);
+      } catch (err) {
+        console.error(err.message);
+        process.exitCode = 1;
+        return;
+      }
+      break;
+    }
+    case 'workspace': {
+      const sub = rest[0];
+      const args = rest.slice(1);
+      const force = args.includes('--force');
+      const baseIdx = args.indexOf('--base');
+      const baseBranch = baseIdx >= 0 ? args[baseIdx + 1] : 'main';
+      const positional = args.filter((a, i) => !a.startsWith('--') && args[i - 1] !== '--base');
+
+      try {
+        if (sub === 'create') {
+          const featureId = positional[0];
+          if (!featureId) {
+            console.error('Usage: sdlc-harness workspace create <feature-id> [--base <branch>]');
+            process.exitCode = 1;
+            return;
+          }
+          const workspace = createWorkspace(cwd, featureId, { baseBranch });
+          console.log(`Created workspace for ${featureId} at ${workspace.path} on branch ${workspace.branch}.`);
+        } else if (sub === 'remove') {
+          const featureId = positional[0];
+          if (!featureId) {
+            console.error('Usage: sdlc-harness workspace remove <feature-id> [--force]');
+            process.exitCode = 1;
+            return;
+          }
+          removeWorkspace(cwd, featureId, { force });
+          console.log(`Removed workspace for ${featureId}.`);
+        } else if (sub === 'prune') {
+          const results = pruneWorkspaces(cwd, { force });
+          if (results.length === 0) {
+            console.log('Nothing to prune.');
+          }
+          for (const r of results) {
+            console.log(r.action === 'removed' ? `Removed workspace for ${r.featureId}.` : `Skipped ${r.featureId} (${r.reason}) — pass --force to override.`);
+          }
+        } else if (sub === 'status') {
+          console.log(JSON.stringify(listWorkspaces(cwd), null, 2));
+        } else {
+          console.error('Usage: sdlc-harness workspace <create|remove|prune|status>');
+          process.exitCode = 1;
+          return;
+        }
       } catch (err) {
         console.error(err.message);
         process.exitCode = 1;
