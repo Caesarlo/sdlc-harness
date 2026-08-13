@@ -20,3 +20,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: echo "Add the real build/deploy steps for {{projectName}} here"
+      # Post-deploy health check (stage 8): a deployment isn't done until this
+      # passes. Replace with a real smoke test / health-endpoint check for the
+      # actual deploy target before recording deployment evidence.
+      - run: echo "Add a post-deploy smoke test / health check for {{projectName}} here"
+      # Rollback path (stage 8): document or script how to revert this deployment
+      # — prefer flipping a feature flag over a redeploy for risky changes.
+      - run: echo "Document the rollback path for {{projectName}} here"
