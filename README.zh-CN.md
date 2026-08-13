@@ -168,29 +168,33 @@ FAILED with 1 error(s):
 
 ## 完整 SDLC 工作流
 
-仓库包含九个相互连接的阶段指南：
+仓库包含九个阶段指南，但它们不是一条必经流水线。第 4、6、7、8、9 阶段是任何功能都
+**必须经过**的核心循环；第 1、2、3、5 阶段是**按需触发**的——每个阶段文档开头都写明了
+何时适用，`AGENTS.md` 的 Routing Map 也会告诉 Agent 应该从哪个阶段进入（新能力、小
+修复、生产事故，还是继续一个已有功能）。
 
-1. 需求（Requirements）
-2. 架构与技术设计（Architecture & Technical Design，ADR）
-3. 用户故事设计（User Story Design）
-4. 功能拆解（Feature Breakdown）
-5. 里程碑规划（Milestone Planning）
-6. 敏捷开发（Agile Development，TDD）
-7. 自验收测试（Self-Acceptance Testing）
-8. 部署（Deployment）
-9. 可观测性与反馈闭环（Observability & Feedback Loop）
+1. 需求（Requirements）*（范围不明确时）*
+2. 架构与技术设计（Architecture & Technical Design，ADR）*（改动影响架构时）*
+3. 用户故事设计（User Story Design）*（能力值得先拆解时）*
+4. 功能拆解（Feature Breakdown）— **必须**
+5. 里程碑规划（Milestone Planning）*（确实需要新规划或重新排序时）*
+6. 敏捷开发（Agile Development，TDD）— **必须**
+7. 自验收测试（Self-Acceptance Testing）— **必须**
+8. 部署（Deployment）— **必须**
+9. 可观测性与反馈闭环（Observability & Feedback Loop）— **必须**
 
 ```mermaid
-flowchart LR
-    A["1 需求"] --> B["2 架构设计与 ADR"]
-    B --> C["3 用户故事"]
-    C --> D["4 功能拆解"]
-    D --> E["5 里程碑规划"]
-    E --> F["6 敏捷 TDD"]
+flowchart TB
+    Slice["功能切片\n（第 4 阶段）"]
+    A["1 需求"] -.可选.-> Slice
+    B["2 架构设计 / ADR"] -.可选.-> Slice
+    C["3 用户故事"] -.可选.-> Slice
+    E["5 里程碑规划"] -.可选.-> Slice
+    Slice --> F["6 敏捷 TDD"]
     F --> G["7 自验收"]
     G --> H["8 部署"]
     H --> I["9 可观测性与反馈"]
-    I -."形成闭环".-> A
+    I -."反馈可能重新打开 1 或 2".-> A
 ```
 
 这些文档负责指导工作；目前机器强制执行的规则主要集中在功能状态、依赖、证据记录、来源引用、

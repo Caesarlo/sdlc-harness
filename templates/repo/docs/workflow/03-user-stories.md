@@ -1,5 +1,10 @@
 # Stage 3: User Story Design
 
+> [!TIP]
+> Skip this stage for a bug fix, small enhancement, or anything whose observable behavior
+> can be stated directly as one feature's `behavior` field. Reserve full user-story
+> writeup for new user-facing capability that benefits from being decomposed first.
+
 ## Inputs
 - Approved requirements and architecture from stages 1-2.
 

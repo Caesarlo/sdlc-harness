@@ -21,6 +21,23 @@ chat history. Read this file before doing any implementation work.
 
 ## Routing Map
 
+Stages 1, 2, 3, and 5 are conditionally required, not a mandatory sequence — each stage
+document states at the top when it can be skipped. Stages 4, 6, 7, 8, and 9 are the
+always-required core loop for any feature.
+
+Pick your entry point by what you're actually doing:
+
+- **New user-facing capability, unclear scope** — start at stage 1.
+- **New capability, requirements already clear, but it crosses a service/module
+  boundary or needs a new dependency** — start at stage 2.
+- **Small enhancement or bug fix with no new requirement** — go straight to stage 4
+  (skip 1-3, 5).
+- **Production incident or regression** — go straight to stage 8/9 to restore service and
+  capture the feedback, then open a stage-4 feature for the underlying fix.
+- **Feature already exists in `feature_list.json` and is `not_started` with passing
+  dependencies** — go straight to stage 6.
+
+Stage docs:
 - `docs/workflow/01-requirements.md` — capture and refine raw requirements
 - `docs/workflow/02-architecture-design.md` — architecture decisions and ADRs
 - `docs/workflow/03-user-stories.md` — user stories with acceptance criteria

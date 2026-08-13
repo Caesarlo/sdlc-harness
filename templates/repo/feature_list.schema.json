@@ -51,6 +51,10 @@
             "type": "string",
             "description": "Agent or developer this feature is assigned to. Features with no owner share one implicit bucket, so a repo that never sets owner keeps the old single-active-feature behavior."
           },
+          "risk": {
+            "enum": ["low", "medium", "high"],
+            "description": "Informational signal for which upstream stages (architecture, user stories, milestone planning) are worth doing in full before implementation. Not enforced by validate."
+          },
           "status": { "enum": ["not_started", "in_progress", "blocked", "passing"] },
           "dependencies": { "type": "array", "items": { "type": "string" } },
           "verification": {

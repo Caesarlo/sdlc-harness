@@ -1,5 +1,11 @@
 # Stage 2: Architecture & Technical Design
 
+> [!TIP]
+> Skip this stage for a feature that doesn't cross a service/module boundary, introduce a
+> new dependency, or touch a decision already covered by an existing ADR. Go straight to
+> stage 4 (or stage 6 for a trivial fix). Revisit this stage only when the change is
+> load-bearing enough to justify an ADR — see the criterion below.
+
 ## Inputs
 - The approved `docs/product/requirements.md`.
 

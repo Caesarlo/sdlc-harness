@@ -175,29 +175,35 @@ detect regressions.
 
 ## The full SDLC workflow
 
-The repository includes guidance for nine connected stages:
+The repository includes guidance for nine stages, but they are not a mandatory pipeline.
+Stages 4, 6, 7, 8, and 9 are the **always-required core loop** for any feature. Stages 1,
+2, 3, and 5 are **conditionally required** — each stage document states at the top when
+it applies, and `AGENTS.md`'s Routing Map tells an agent which entry point fits the
+change at hand (new capability vs. small fix vs. incident vs. resuming an existing
+feature).
 
-1. Requirements
-2. Architecture & Technical Design (ADRs)
-3. User Story Design
-4. Feature Breakdown
-5. Milestone Planning
-6. Agile Development (TDD)
-7. Self-Acceptance Testing
-8. Deployment
-9. Observability & Feedback Loop
+1. Requirements *(when scope is unclear)*
+2. Architecture & Technical Design (ADRs) *(when the change is load-bearing)*
+3. User Story Design *(when a capability benefits from decomposition first)*
+4. Feature Breakdown — **always**
+5. Milestone Planning *(when new or re-sequenced planning is actually needed)*
+6. Agile Development (TDD) — **always**
+7. Self-Acceptance Testing — **always**
+8. Deployment — **always**
+9. Observability & Feedback Loop — **always**
 
 ```mermaid
-flowchart LR
-    A["1 Requirements"] --> B["2 Architecture and ADRs"]
-    B --> C["3 User Stories"]
-    C --> D["4 Feature Breakdown"]
-    D --> E["5 Milestone Planning"]
-    E --> F["6 Agile TDD"]
+flowchart TB
+    Slice["Feature slice\n(stage 4)"]
+    A["1 Requirements"] -.optional.-> Slice
+    B["2 Architecture / ADRs"] -.optional.-> Slice
+    C["3 User Stories"] -.optional.-> Slice
+    E["5 Milestone Planning"] -.optional.-> Slice
+    Slice --> F["6 Agile TDD"]
     F --> G["7 Self-Acceptance"]
     G --> H["8 Deployment"]
     H --> I["9 Observability and Feedback"]
-    I -."closes the loop".-> A
+    I -."feedback can reopen 1 or 2".-> A
 ```
 
 These documents guide the work; the machine-enforced rules currently focus on feature state,

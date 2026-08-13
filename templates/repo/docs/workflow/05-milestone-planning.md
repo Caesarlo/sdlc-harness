@@ -1,5 +1,11 @@
 # Stage 5: Milestone Planning
 
+> [!TIP]
+> Skip this stage for a small or already-scoped project: assign new features straight to
+> the nearest existing milestone instead of re-planning. Only do full milestone
+> (re-)planning when a genuinely new body of work is starting or stage 9 feedback
+> requires re-sequencing not-yet-started milestones.
+
 ## Inputs
 - The feature set produced in stage 4.
 
