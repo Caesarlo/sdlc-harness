@@ -1,5 +1,10 @@
 name: deploy
 
+# CD (trunk deployment): the only workflow allowed to touch production. Triggers
+# exclusively on main, which ci.yml has already gated via required PR checks (enable
+# branch protection on main requiring the ci workflow to pass). Keep deployment
+# artifacts and production credentials out of ci.yml — this workflow is their only home.
+
 on:
   push:
     branches: [main]

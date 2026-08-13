@@ -15,6 +15,12 @@
   implementation details belong in code comments or the feature itself, not an ADR.
 - Cover data model, service/module boundaries, and how each non-functional requirement
   from stage 1 will actually be met.
+- Write a `ci-cd-strategy` ADR once the project has a real deploy target: branching
+  model (trunk-based vs. longer-lived branches), what environments exist, what gates a
+  merge to main (`.github/workflows/ci.yml`, scaffolded at `init`/`adopt`) versus what
+  gates a production deploy (`.github/workflows/deploy.yml`, filled in at stage 8), and
+  how secrets/config are managed per environment. This is a load-bearing decision like
+  any other — treat it as one instead of letting stage 8 improvise it on the spot.
 - Treat an `accepted` ADR as append-only. Never edit its Decision or Consequences after
   the fact — if circumstances change, write a new ADR, set its `supersedes` field, and
   update the old ADR's `status` to `superseded` with `superseded-by` pointing at the

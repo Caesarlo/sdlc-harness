@@ -4,6 +4,12 @@
 - A milestone whose features have all passed self-acceptance testing (stage 7).
 
 ## What The Agent Does
+- This stage owns CD (trunk deployment) only. CI (the `.github/workflows/ci.yml`
+  pull-request validation pipeline) was already scaffolded at `init`/`adopt` and has
+  been gating merges to main since the project's first commit — nothing to set up here.
+  If the project has a `ci-cd-strategy` ADR from stage 2, follow it; if this is the
+  first milestone reaching deployment and no such ADR exists yet, go write one before
+  improvising the pipeline shape here.
 - Fill in `.github/workflows/deploy.yml` (scaffolded by `init`/`adopt`) for the actual
   deploy target, including a post-deploy health check step (smoke test or
   health-endpoint check) that gates the deployment from being considered done, and a

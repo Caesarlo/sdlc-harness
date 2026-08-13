@@ -1,0 +1,24 @@
+name: ci
+
+# CI (pull-request validation): fast feedback on every change, before it can reach main.
+# Keep this fast — lint/build/test only, no deployment artifacts. See docs/workflow/
+# 08-deployment.md for the separate trunk-deployment pipeline (deploy.yml), which is the
+# only workflow allowed to touch production and only runs after this one has passed on
+# main.
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npx sdlc-harness validate
+      # Add the real lint/type-check/test/build steps for {{projectName}} here.
+      - run: echo "Add lint/test/build steps for {{projectName}} here"

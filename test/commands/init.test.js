@@ -39,6 +39,7 @@ test('init writes the git hook and CI deploy workflow into dot-directories', () 
     assert.equal(fs.statSync(hookPath).mode & 0o111, 0o111);
   }
   assert.equal(fs.existsSync(path.join(dir, '.github', 'workflows', 'deploy.yml')), true);
+  assert.equal(fs.existsSync(path.join(dir, '.github', 'workflows', 'ci.yml')), true);
 });
 
 test('the freshly-initialized feature_list.json passes every validator', () => {
