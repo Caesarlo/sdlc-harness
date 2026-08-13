@@ -25,6 +25,7 @@ test('new-feature appends a schema-valid entry from scripted answers', async () 
     'M0',                // milestone
     'Add widget',        // title
     'user can add a widget', // behavior
+    '',                    // owner
     'npm test -- widget', // verification command
     '',                   // dependencies
     'docs/adr/0001-widgets.md', // source refs

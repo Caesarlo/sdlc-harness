@@ -10,7 +10,11 @@
     "rules": {
       "type": "object",
       "properties": {
-        "single_active_feature": { "type": "boolean" },
+        "wip_limit_per_owner": { "type": "integer", "minimum": 1 },
+        "single_active_feature": {
+          "type": "boolean",
+          "description": "Deprecated alias for wip_limit_per_owner: 1 (true) or unlimited (false). Ignored if wip_limit_per_owner is set."
+        },
         "passing_requires_evidence": { "type": "boolean" },
         "do_not_skip_verification": { "type": "boolean" },
         "feature_should_fit_one_session": { "type": "boolean" },
@@ -43,6 +47,10 @@
           "area": { "type": "string" },
           "title": { "type": "string" },
           "behavior": { "type": "string" },
+          "owner": {
+            "type": "string",
+            "description": "Agent or developer this feature is assigned to. Features with no owner share one implicit bucket, so a repo that never sets owner keeps the old single-active-feature behavior."
+          },
           "status": { "enum": ["not_started", "in_progress", "blocked", "passing"] },
           "dependencies": { "type": "array", "items": { "type": "string" } },
           "verification": {

@@ -109,8 +109,9 @@ The harness provides three layers:
 
 - **Persistent context** — `AGENTS.md`, `feature_list.json`, ADRs, workflow documents, and
   `progress.md` survive agents and sessions.
-- **Explicit completion rules** — only one feature may be active, dependencies must be valid,
-  and a passing feature must have recorded evidence including a review entry.
+- **Explicit completion rules** — each owner may have at most `wip_limit_per_owner`
+  active features (default 1), dependencies must be valid, and a passing feature must
+  have recorded evidence including a review entry.
 - **Executable governance** — `sdlc-harness validate` exits non-zero when repository state
   violates the contract, so the same rules can run locally and in CI.
 
@@ -131,11 +132,14 @@ npx sdlc-harness status
     "blocked": 0,
     "passing": 6
   },
-  "activeFeature": {
-    "id": "M1-CHECKOUT-003",
-    "title": "Handle payment timeout",
-    "behavior": "A timed-out payment returns a recoverable error."
-  },
+  "activeFeatures": [
+    {
+      "id": "M1-CHECKOUT-003",
+      "title": "Handle payment timeout",
+      "behavior": "A timed-out payment returns a recoverable error.",
+      "owner": null
+    }
+  ],
   "milestoneCount": 2
 }
 ```
@@ -155,7 +159,7 @@ The validator checks:
 - declared verification for every feature;
 - known dependencies with no dependency cycles;
 - no dependency on a feature in a later milestone;
-- at most one `in_progress` feature;
+- at most `rules.wip_limit_per_owner` `in_progress` features per owner (default 1);
 - evidence and a `review` entry for every `passing` feature;
 - monotonic completion: a previously passing feature cannot silently regress;
 - coverage of ADR topics required by `harness.config.json`;

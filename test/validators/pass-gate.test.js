@@ -11,14 +11,48 @@ test('accepts zero or one in_progress feature', () => {
   assert.deepEqual(validatePassGate(data, null), { ok: true, errors: [] });
 });
 
-test('rejects more than one in_progress feature', () => {
+test('rejects more than one in_progress feature in the same owner bucket', () => {
   const data = { features: [
     feature({ id: 'A', status: 'in_progress' }),
     feature({ id: 'B', status: 'in_progress' }),
   ] };
   const result = validatePassGate(data, null);
   assert.equal(result.ok, false);
-  assert.match(result.errors.join(' '), /Only one feature may be in_progress/);
+  assert.match(result.errors.join(' '), /At most 1 feature\(s\) may be in_progress/);
+});
+
+test('accepts one in_progress feature per distinct owner', () => {
+  const data = { features: [
+    feature({ id: 'A', status: 'in_progress', owner: 'agent-1' }),
+    feature({ id: 'B', status: 'in_progress', owner: 'agent-2' }),
+  ] };
+  assert.deepEqual(validatePassGate(data, null), { ok: true, errors: [] });
+});
+
+test('rejects two in_progress features for the same named owner', () => {
+  const data = { features: [
+    feature({ id: 'A', status: 'in_progress', owner: 'agent-1' }),
+    feature({ id: 'B', status: 'in_progress', owner: 'agent-1' }),
+  ] };
+  const result = validatePassGate(data, null);
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join(' '), /owner "agent-1"/);
+});
+
+test('honors an explicit wip_limit_per_owner greater than 1', () => {
+  const data = { rules: { wip_limit_per_owner: 2 }, features: [
+    feature({ id: 'A', status: 'in_progress' }),
+    feature({ id: 'B', status: 'in_progress' }),
+  ] };
+  assert.deepEqual(validatePassGate(data, null), { ok: true, errors: [] });
+});
+
+test('legacy single_active_feature: false lifts the limit', () => {
+  const data = { rules: { single_active_feature: false }, features: [
+    feature({ id: 'A', status: 'in_progress' }),
+    feature({ id: 'B', status: 'in_progress' }),
+  ] };
+  assert.deepEqual(validatePassGate(data, null), { ok: true, errors: [] });
 });
 
 test('rejects a passing feature with no evidence', () => {

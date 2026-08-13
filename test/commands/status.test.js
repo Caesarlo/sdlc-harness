@@ -22,14 +22,14 @@ test('status summarizes counts and the active feature', () => {
   const status = runStatus(dir);
   assert.equal(status.project, 'demo');
   assert.deepEqual(status.counts, { not_started: 1, in_progress: 1, blocked: 1, passing: 1 });
-  assert.deepEqual(status.activeFeature, { id: 'B', title: 'Do the thing', behavior: 'thing happens' });
+  assert.deepEqual(status.activeFeatures, [{ id: 'B', title: 'Do the thing', behavior: 'thing happens', owner: null }]);
   assert.equal(status.milestoneCount, 2);
 });
 
-test('status reports null activeFeature when nothing is in_progress', () => {
+test('status reports an empty activeFeatures array when nothing is in_progress', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
   const data = { project: 'demo', milestones: [{ id: 'M0' }], features: [{ id: 'A', status: 'not_started' }] };
   fs.writeFileSync(path.join(dir, 'feature_list.json'), JSON.stringify(data));
 
-  assert.equal(runStatus(dir).activeFeature, null);
+  assert.deepEqual(runStatus(dir).activeFeatures, []);
 });

@@ -18,6 +18,7 @@ export async function runNewFeature(repoRoot, { input = process.stdin, output = 
     const milestone = (await ask('Milestone id: ')).trim();
     const title = (await ask('Title: ')).trim();
     const behavior = (await ask('Behavior (observable outcome): ')).trim();
+    const owner = (await ask('Owner (blank for the shared default bucket): ')).trim();
     const verificationCommand = (await ask('Verification command: ')).trim();
     const dependenciesRaw = (await ask('Dependencies (comma-separated ids, blank for none): ')).trim();
     const sourceRefsRaw = (await ask('Source refs (comma-separated paths, blank for none): ')).trim();
@@ -27,6 +28,7 @@ export async function runNewFeature(repoRoot, { input = process.stdin, output = 
       milestone,
       title,
       behavior,
+      ...(owner ? { owner } : {}),
       status: 'not_started',
       dependencies: dependenciesRaw ? dependenciesRaw.split(',').map((s) => s.trim()) : [],
       verification: [{ type: 'automated', command: verificationCommand, expected: '' }],

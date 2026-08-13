@@ -34,7 +34,9 @@ chat history. Read this file before doing any implementation work.
 
 ## Feature Rules
 
-- Only one feature may be `in_progress` at a time.
+- Only `rules.wip_limit_per_owner` feature(s) may be `in_progress` per `owner` at a time
+  (default: 1). Features with no `owner` share one implicit bucket, so a single-agent
+  repo that never sets `owner` behaves exactly as before.
 - A feature may become `passing` only after its declared verification has run
   successfully, evidence is recorded, and an evidence entry with `kind: "review"` exists.
 - `feature_list.json` is validated by `npx sdlc-harness validate` — do not hand-edit
@@ -46,4 +48,4 @@ chat history. Read this file before doing any implementation work.
 1. Run `npx sdlc-harness validate` and `npx sdlc-harness status`.
 2. Append a checkpoint to `progress.md`: what changed, verification performed, evidence,
    next action.
-3. Confirm no more than one feature is `in_progress`.
+3. Confirm your owner's `in_progress` count is within `rules.wip_limit_per_owner`.

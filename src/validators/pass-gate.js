@@ -1,11 +1,28 @@
 const PLACEHOLDER_PATTERN = /-(SCOPE|RELEASE)-\d+$/;
+const DEFAULT_OWNER_BUCKET = '_default';
+
+function resolveWipLimit(rules) {
+  if (!rules) return 1;
+  if (typeof rules.wip_limit_per_owner === 'number') return rules.wip_limit_per_owner;
+  if (rules.single_active_feature === false) return Infinity;
+  return 1;
+}
 
 export function validatePassGate(data, previousSnapshot) {
   const errors = [];
 
-  const inProgress = data.features.filter((f) => f.status === 'in_progress');
-  if (inProgress.length > 1) {
-    errors.push(`Only one feature may be in_progress at a time, found ${inProgress.length}: ${inProgress.map((f) => f.id).join(', ')}`);
+  const wipLimit = resolveWipLimit(data.rules);
+  const inProgressByOwner = new Map();
+  for (const feature of data.features.filter((f) => f.status === 'in_progress')) {
+    const owner = feature.owner || DEFAULT_OWNER_BUCKET;
+    if (!inProgressByOwner.has(owner)) inProgressByOwner.set(owner, []);
+    inProgressByOwner.get(owner).push(feature);
+  }
+  for (const [owner, features] of inProgressByOwner) {
+    if (features.length > wipLimit) {
+      const ownerLabel = owner === DEFAULT_OWNER_BUCKET ? 'the default owner bucket' : `owner "${owner}"`;
+      errors.push(`At most ${wipLimit} feature(s) may be in_progress for ${ownerLabel}, found ${features.length}: ${features.map((f) => f.id).join(', ')}`);
+    }
   }
 
   for (const feature of data.features) {

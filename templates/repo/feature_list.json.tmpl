@@ -3,7 +3,7 @@
   "schema_version": "1.0",
   "last_updated": "",
   "rules": {
-    "single_active_feature": true,
+    "wip_limit_per_owner": 1,
     "passing_requires_evidence": true,
     "do_not_skip_verification": true,
     "feature_should_fit_one_session": true,
@@ -15,7 +15,7 @@
   },
   "status_legend": {
     "not_started": "Work has not begun.",
-    "in_progress": "This is the only active implementation task.",
+    "in_progress": "This is the only active implementation task for this feature's owner (see rules.wip_limit_per_owner).",
     "blocked": "A documented blocker prevents progress.",
     "passing": "Required behavior and verification have passed with evidence, including a review evidence entry."
   },

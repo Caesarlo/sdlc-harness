@@ -105,8 +105,8 @@ flowchart LR
 
 - **持久上下文** — `AGENTS.md`、`feature_list.json`、ADR、工作流文档和 `progress.md`
   可以跨 Agent、跨会话保留。
-- **明确的完成规则** — 同时只能有一个活动功能；依赖必须有效；标记为 `passing` 的功能必须
-  记录证据，并包含 review 条目。
+- **明确的完成规则** — 每个 owner 同时最多只能有 `wip_limit_per_owner`（默认 1）个活动功能；
+  依赖必须有效；标记为 `passing` 的功能必须记录证据，并包含 review 条目。
 - **可执行的治理** — 当仓库状态违反协议时，`sdlc-harness validate` 会以非零状态退出，
   因此同一套规则可以同时用于本地和 CI。
 
@@ -127,11 +127,14 @@ npx sdlc-harness status
     "blocked": 0,
     "passing": 6
   },
-  "activeFeature": {
-    "id": "M1-CHECKOUT-003",
-    "title": "Handle payment timeout",
-    "behavior": "A timed-out payment returns a recoverable error."
-  },
+  "activeFeatures": [
+    {
+      "id": "M1-CHECKOUT-003",
+      "title": "Handle payment timeout",
+      "behavior": "A timed-out payment returns a recoverable error.",
+      "owner": null
+    }
+  ],
   "milestoneCount": 2
 }
 ```
@@ -151,7 +154,7 @@ FAILED with 1 error(s):
 - 每个功能都声明了验证方式；
 - 依赖指向已知功能，并且不存在依赖环；
 - 功能没有依赖更晚里程碑中的功能；
-- 同时最多只有一个 `in_progress` 功能；
+- 每个 owner 同时最多只有 `rules.wip_limit_per_owner`（默认 1）个 `in_progress` 功能；
 - 每个 `passing` 功能都有证据和一条 `review` 记录；
 - 完成状态单调递增：之前已经通过的功能不能悄悄退回未完成状态；
 - ADR 覆盖 `harness.config.json` 要求的主题；
