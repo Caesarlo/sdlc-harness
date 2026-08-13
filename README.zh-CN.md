@@ -12,7 +12,7 @@
   <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.0-f59e0b?style=flat-square&labelColor=262626" alt="版本 0.1.0"></a>
   <a href="package.json"><img src="https://img.shields.io/badge/Node.js-%3E%3D22-339933?style=flat-square&logo=nodedotjs&logoColor=white&labelColor=262626" alt="Node.js 22 或更高版本"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2563eb?style=flat-square&labelColor=262626" alt="MIT 许可证"></a>
-  <a href="https://gump.top/sdlc-harness-docs"><img src="https://img.shields.io/badge/docs-gump.top%2Fsdlc--harness--docs-8b5cf6?style=flat-square&labelColor=262626" alt="文档站点"></a>
+  <a href="https://sdlc-harness.mintlify.site/sdlc-harness-docs"><img src="https://img.shields.io/badge/docs-sdlc--harness.mintlify.site-8b5cf6?style=flat-square&labelColor=262626" alt="文档站点"></a>
 </p>
 
 <p align="center">
@@ -32,7 +32,7 @@
   <a href="#快速开始">快速开始</a>  · 
   <a href="#完整-sdlc-工作流">工作流</a>  · 
   <a href="#命令">命令</a>  · 
-  <a href="https://gump.top/sdlc-harness-docs">完整文档</a>
+  <a href="https://sdlc-harness.mintlify.site/sdlc-harness-docs">完整文档</a>
 </p>
 
 <p align="center"><code>npx sdlc-harness adopt</code></p>

@@ -12,7 +12,7 @@
   <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.0-f59e0b?style=flat-square&labelColor=262626" alt="Version 0.1.0"></a>
   <a href="package.json"><img src="https://img.shields.io/badge/Node.js-%3E%3D22-339933?style=flat-square&logo=nodedotjs&logoColor=white&labelColor=262626" alt="Node.js 22 or newer"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2563eb?style=flat-square&labelColor=262626" alt="MIT License"></a>
-  <a href="https://gump.top/sdlc-harness-docs"><img src="https://img.shields.io/badge/docs-gump.top%2Fsdlc--harness--docs-8b5cf6?style=flat-square&labelColor=262626" alt="Documentation site"></a>
+  <a href="https://sdlc-harness.mintlify.site/sdlc-harness-docs"><img src="https://img.shields.io/badge/docs-sdlc--harness.mintlify.site-8b5cf6?style=flat-square&labelColor=262626" alt="Documentation site"></a>
 </p>
 
 <p align="center">
@@ -33,7 +33,7 @@
   <a href="#quickstart">Quickstart</a>  · 
   <a href="#the-full-sdlc-workflow">Workflow</a>  · 
   <a href="#commands">Commands</a>  · 
-  <a href="https://gump.top/sdlc-harness-docs">Full documentation</a>
+  <a href="https://sdlc-harness.mintlify.site/sdlc-harness-docs">Full documentation</a>
 </p>
 
 <p align="center"><code>npx sdlc-harness adopt</code></p>
