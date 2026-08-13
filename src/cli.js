@@ -12,6 +12,7 @@ import {
   claimFeature, claimNextFeature, releaseFeature, renewClaim, takeoverExpiredClaim,
 } from './lib/claims.js';
 import { createWorkspace, removeWorkspace, pruneWorkspaces, listWorkspaces } from './lib/worktree.js';
+import { claimAndPush } from './lib/git-provider.js';
 
 const [, , command, ...rest] = process.argv;
 const cwd = process.cwd();
@@ -22,15 +23,21 @@ function printUsage() {
 }
 
 function parseClaimArgs(args) {
-  const flags = { owner: null, actor: null, ttl: null, next: false, takeoverExpired: false };
+  const flags = {
+    owner: null, actor: null, ttl: null, next: false, takeoverExpired: false,
+    push: false, remote: 'origin', branch: 'main',
+  };
   const positional = [];
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i];
     if (arg === '--next') flags.next = true;
     else if (arg === '--takeover-expired') flags.takeoverExpired = true;
+    else if (arg === '--push') flags.push = true;
     else if (arg === '--owner') flags.owner = args[(i += 1)];
     else if (arg === '--actor') flags.actor = args[(i += 1)];
     else if (arg === '--ttl') flags.ttl = Number(args[(i += 1)]);
+    else if (arg === '--remote') flags.remote = args[(i += 1)];
+    else if (arg === '--branch') flags.branch = args[(i += 1)];
     else if (!arg.startsWith('--')) positional.push(arg);
   }
   return { flags, positional };
@@ -152,6 +159,21 @@ async function main() {
         if (flags.takeoverExpired) {
           const claim = takeoverExpiredClaim(cwd, featureId, { owner, actorId: flags.actor, ttlMinutes });
           console.log(`Took over expired claim on ${featureId} for ${owner} (lease until ${claim.lease_until}).`);
+          break;
+        }
+        if (flags.push) {
+          // Commits and pushes the claim; if another machine already pushed
+          // a claim on the same feature first, this discovers the loss at
+          // push time and automatically falls back to the next ready
+          // feature instead of leaving the caller with an unpushable claim.
+          const result = claimAndPush(cwd, featureId, {
+            owner, actorId: flags.actor, ttlMinutes, remote: flags.remote, branch: flags.branch,
+          });
+          if (result.status === 'claimed-fallback') {
+            console.log(`${featureId} was already claimed remotely — claimed ${result.featureId} instead for ${owner} and pushed.`);
+          } else {
+            console.log(`Claimed ${result.featureId} for ${owner} and pushed.`);
+          }
           break;
         }
         const claim = claimFeature(cwd, featureId, { owner, actorId: flags.actor, ttlMinutes });

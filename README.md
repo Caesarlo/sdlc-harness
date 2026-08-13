@@ -265,6 +265,10 @@ git config core.hooksPath .githooks
 
 All claim commands accept `--owner <name>` (defaults to `harness.config.json`'s `defaultOwner`), `--actor <id>` (distinguishes multiple Agent sessions run by the same owner — claim uniqueness is always per-feature, never per-actor), and `--ttl <minutes>` (lease length, default 120).
 
+### Cross-machine claiming (git provider)
+
+`sdlc-harness claim <feature-id> --push` commits the claim and pushes it (`--remote`/`--branch`, default `origin`/`main`). Git has no real-time cross-machine lock, so two machines can each claim locally before either has seen the other's push — the actual conflict only surfaces when the second one tries to push. `--push` detects that rejection, discards the losing local commit, resyncs with the remote, and automatically falls back to the next ready feature and pushes that instead, rather than leaving you with a claim that can never reach the remote.
+
 ### Solo vs. team mode
 
 `harness.config.json`'s `collaborationMode` controls whether claim/lease is visible:
