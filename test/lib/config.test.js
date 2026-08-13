@@ -12,6 +12,7 @@ test('loadConfig returns defaults when file is missing', () => {
     requiredAdrTopics: [],
     testStrategy: 'isolated-tdd',
     defaultOwner: 'agent',
+    collaborationMode: 'solo',
   });
 });
 
@@ -25,6 +26,7 @@ test('loadConfig merges file contents over defaults', () => {
     requiredAdrTopics: ['data-model'],
     testStrategy: 'isolated-tdd',
     defaultOwner: 'agent',
+    collaborationMode: 'solo',
   });
 });
 
@@ -33,4 +35,18 @@ test('loadConfig rejects an unknown testStrategy', () => {
   const configPath = path.join(dir, 'harness.config.json');
   fs.writeFileSync(configPath, JSON.stringify({ testStrategy: 'vibes' }));
   assert.throws(() => loadConfig(configPath), /testStrategy must be one of/);
+});
+
+test('loadConfig rejects an unknown collaborationMode', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  const configPath = path.join(dir, 'harness.config.json');
+  fs.writeFileSync(configPath, JSON.stringify({ collaborationMode: 'chaos' }));
+  assert.throws(() => loadConfig(configPath), /collaborationMode must be one of/);
+});
+
+test('loadConfig accepts collaborationMode: team', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  const configPath = path.join(dir, 'harness.config.json');
+  fs.writeFileSync(configPath, JSON.stringify({ collaborationMode: 'team' }));
+  assert.equal(loadConfig(configPath).collaborationMode, 'team');
 });

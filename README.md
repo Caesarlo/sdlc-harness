@@ -257,6 +257,13 @@ git config core.hooksPath .githooks
 
 All claim commands accept `--owner <name>` (defaults to `harness.config.json`'s `defaultOwner`), `--actor <id>` (distinguishes multiple Agent sessions run by the same owner — claim uniqueness is always per-feature, never per-actor), and `--ttl <minutes>` (lease length, default 120).
 
+### Solo vs. team mode
+
+`harness.config.json`'s `collaborationMode` controls whether claim/lease is visible:
+
+- **`"solo"`** (the default): you never run `claim`/`release` yourself. `sdlc-harness verify` claims the feature for `defaultOwner` before running and releases it afterward, invisibly — the underlying CAS/claim safety is still there, it just never surfaces. If another owner actively holds the claim, `verify` still refuses to run rather than racing evidence writes against them.
+- **`"team"`**: `verify` never manages claims implicitly. Claim a feature explicitly first (`sdlc-harness claim <feature-id>` or `claim --next`), then `verify`.
+
 ## Agent compatibility
 
 | Agent                                     | Core workflow | Extra integration                             |

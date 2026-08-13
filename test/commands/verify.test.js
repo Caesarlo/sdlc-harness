@@ -43,12 +43,18 @@ test('verify runs the real command and records passing evidence with an exit cod
   assert.equal(evidence[0].exit_code, 0);
   assert.ok(evidence[0].recorded_at);
 
+  // Solo mode (the default) auto-claims before running and auto-releases
+  // after, invisibly — both show up in the audit log around the verify
+  // event itself.
   const monthKey = new Date().toISOString().slice(0, 7);
   const events = readEvents(dir, monthKey);
-  assert.equal(events.length, 1);
-  assert.equal(events[0].type, 'feature.verified');
-  assert.equal(events[0].feature_id, 'M0-FEAT-001');
-  assert.equal(events[0].ok, true);
+  assert.deepEqual(events.map((e) => e.type), ['feature.claimed', 'feature.verified', 'feature.released']);
+  assert.equal(events[1].feature_id, 'M0-FEAT-001');
+  assert.equal(events[1].ok, true);
+
+  // And the auto-claim must not linger afterward.
+  const savedFeature = JSON.parse(fs.readFileSync(featureListPath, 'utf8')).features[0];
+  assert.equal(savedFeature.claim, null);
 });
 
 test('verify records a failing command as failed evidence and returns ok:false, without throwing', () => {
@@ -103,4 +109,56 @@ test('verify retries once and preserves a concurrent writer\'s change instead of
   const ids = saved.features.map((f) => f.id).sort();
   assert.deepEqual(ids, ['M0-FEAT-001', 'M0-FEAT-CONCURRENT']);
   assert.equal(saved.features[0].evidence.length, 1);
+});
+
+test('verify refuses to run when another owner actively holds the claim, even in solo mode', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  const featureListPath = seedRepo(dir, [{ type: 'automated', command: NODE_TRUE, expected: 'exit 0' }]);
+
+  const data = JSON.parse(fs.readFileSync(featureListPath, 'utf8'));
+  data.features[0].claim = {
+    id: 'x', owner: 'someone-else', actor_id: 'someone-else',
+    claimed_at: new Date().toISOString(), lease_until: new Date(Date.now() + 60_000).toISOString(),
+  };
+  fs.writeFileSync(featureListPath, JSON.stringify(data, null, 2) + '\n');
+
+  assert.throws(() => runVerify(dir, 'M0-FEAT-001'), /currently claimed by "someone-else"/);
+
+  const saved = JSON.parse(fs.readFileSync(featureListPath, 'utf8'));
+  assert.equal(saved.features[0].evidence.length, 0);
+});
+
+test('verify does not auto-claim or auto-release in team mode, and requires a pre-existing claim to have been made deliberately', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  fs.writeFileSync(path.join(dir, 'harness.config.json'), JSON.stringify({ collaborationMode: 'team' }));
+  const featureListPath = seedRepo(dir, [{ type: 'automated', command: NODE_TRUE, expected: 'exit 0' }]);
+
+  const result = runVerify(dir, 'M0-FEAT-001');
+  assert.equal(result.ok, true);
+
+  // No claim/release events in team mode — verify only ever wrote its own
+  // feature.verified event.
+  const monthKey = new Date().toISOString().slice(0, 7);
+  const events = readEvents(dir, monthKey);
+  assert.deepEqual(events.map((e) => e.type), ['feature.verified']);
+
+  const saved = JSON.parse(fs.readFileSync(featureListPath, 'utf8'));
+  assert.equal(saved.features[0].claim, undefined);
+});
+
+test('verify in solo mode does not release a claim that already existed before this call', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  const featureListPath = seedRepo(dir, [{ type: 'automated', command: NODE_TRUE, expected: 'exit 0' }]);
+
+  const data = JSON.parse(fs.readFileSync(featureListPath, 'utf8'));
+  data.features[0].claim = {
+    id: 'x', owner: 'agent', actor_id: 'agent',
+    claimed_at: new Date().toISOString(), lease_until: new Date(Date.now() + 60_000).toISOString(),
+  };
+  fs.writeFileSync(featureListPath, JSON.stringify(data, null, 2) + '\n');
+
+  runVerify(dir, 'M0-FEAT-001');
+
+  const saved = JSON.parse(fs.readFileSync(featureListPath, 'utf8'));
+  assert.equal(saved.features[0].claim.id, 'x');
 });
