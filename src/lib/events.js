@@ -10,16 +10,18 @@ const EVENTS_DIR = path.join('.harness', 'events');
 // side-channel to feature_list.json: it records *that* a state change
 // happened, it never gets read back to decide current state.
 //
-// `actor` stands in for the OS user until claim/lease introduces a proper
-// owner/actor_id split — see the architecture review discussion on
-// distinguishing a person from a specific Agent session.
+// `actor` here is just the OS user — claim/lease (src/lib/claims.js) has its
+// own owner/actor_id distinction on the claim record itself; this field is
+// a coarser "who ran the CLI" signal and isn't meant to replace that.
 //
 // Concurrency note: appendFileSync uses the OS append flag, which POSIX
 // guarantees is atomic for writes under PIPE_BUF; Windows does not give the
 // same cross-process guarantee. Event lines are kept small (single JSON
-// object, no embedded newlines) to minimize interleaving risk, but this is
-// not a substitute for a real lock if/when multiple processes log heavily
-// concurrently — revisit alongside the claim/lease work.
+// object, no embedded newlines) to minimize interleaving risk. This has been
+// stress-tested with multiple real concurrent OS processes (see
+// test/lib/events-concurrency.test.js) without observed corruption, but that
+// is empirical evidence at a given concurrency level, not a correctness
+// proof — revisit with a real lock if event volume/concurrency grows a lot.
 export function appendEvent(repoRoot, event) {
   const now = new Date();
   const monthKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
