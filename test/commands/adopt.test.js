@@ -29,6 +29,16 @@ test('adopt inserts missing files alongside existing ones', () => {
 
   assert.equal(fs.existsSync(path.join(dir, 'feature_list.json')), true);
   assert.equal(fs.existsSync(path.join(dir, 'docs', 'workflow', '01-requirements.md')), true);
+  assert.equal(fs.existsSync(path.join(dir, '.gitignore')), true);
+});
+
+test('adopt does not overwrite a project\'s existing .gitignore', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  fs.writeFileSync(path.join(dir, '.gitignore'), 'dist/\n');
+
+  runAdopt(dir, { projectName: 'demo-project' });
+
+  assert.equal(fs.readFileSync(path.join(dir, '.gitignore'), 'utf8'), 'dist/\n');
 });
 
 test('the feature_list.json adopted into a partially-existing repo passes every validator', () => {

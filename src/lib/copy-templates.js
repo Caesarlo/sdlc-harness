@@ -44,6 +44,7 @@ export function buildSpecialEntries(targetDir) {
     }));
 
   return [
+    { src: path.join(TEMPLATES_ROOT, 'special', 'gitignore.tmpl'), destRelative: path.join(targetDir, '.gitignore') },
     { src: path.join(TEMPLATES_ROOT, 'special', 'githooks', 'pre-commit.tmpl'), destRelative: path.join(targetDir, '.githooks', 'pre-commit'), mode: 0o755 },
     { src: path.join(TEMPLATES_ROOT, 'special', 'ci', 'ci.yml.tmpl'), destRelative: path.join(targetDir, '.github', 'workflows', 'ci.yml') },
     { src: path.join(TEMPLATES_ROOT, 'special', 'ci', 'deploy.yml.tmpl'), destRelative: path.join(targetDir, '.github', 'workflows', 'deploy.yml') },

@@ -42,6 +42,19 @@ test('init writes the git hook and CI deploy workflow into dot-directories', () 
   assert.equal(fs.existsSync(path.join(dir, '.github', 'workflows', 'ci.yml')), true);
 });
 
+test('init writes a .gitignore that ignores only the derived local snapshot, not events/ or feature_list.json', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  runInit(dir, { projectName: 'demo-project' });
+  const gitignorePath = path.join(dir, '.gitignore');
+  assert.equal(fs.existsSync(gitignorePath), true);
+
+  const content = fs.readFileSync(gitignorePath, 'utf8');
+  assert.match(content, /\.harness\/last-validated-features\.json/);
+  // Must not blanket-ignore the whole .harness/ directory — events/ and any
+  // future claims/ data need to be trackable for team sync.
+  assert.doesNotMatch(content, /^\.harness\/\s*$/m);
+});
+
 test('init refuses to overwrite a pre-existing file and reports the conflict', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
   fs.writeFileSync(path.join(dir, 'AGENTS.md'), 'do not touch me');

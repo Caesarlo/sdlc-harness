@@ -1,5 +1,9 @@
 node_modules/
-.harness/
+# Only the derived local snapshot cache is ignored — events/ and claim data
+# (embedded in feature_list.json) are meant to be tracked for team sync.
+# See templates/special/gitignore.tmpl for what gets scaffolded into
+# projects using this harness.
+.harness/last-validated-features.json
 docs/superpowers/
 .worktrees/
 .superpowers/

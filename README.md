@@ -166,12 +166,16 @@ The validator checks:
 - real `source_refs` for non-placeholder features.
 
 Validation records the last successful feature state under `.harness/`, allowing later runs to
-detect regressions.
+detect regressions — see [Commands](#commands) above for how git history is preferred over this
+local cache. `.harness/` is mostly git-tracked on purpose: `events/*.jsonl` (the audit log) and
+claim/lease data (embedded directly in each feature, in `feature_list.json`) need to sync across
+machines for team use. Only `.harness/last-validated-features.json` — a derived cache, regenerated
+by every successful `validate` run — is gitignored; the scaffolded `.gitignore` reflects this.
 
 > [!IMPORTANT]
-> `validate` verifies repository state and evidence records. It does not execute the verification
-> commands declared by a feature or prove that recorded evidence is truthful. Run those commands
-> in your development and CI workflows, then record their results.
+> `validate` verifies repository state and evidence records; it does not itself execute anything.
+> `sdlc-harness verify <feature-id>` is what actually runs a feature's declared verification
+> commands and records real, non-fabricatable evidence — see the Commands table above.
 
 ## The full SDLC workflow
 
