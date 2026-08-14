@@ -14,7 +14,11 @@
 
 - Last updated: (fill in on first real checkpoint)
 - Active feature: None.
-- Standard verification: `npx sdlc-harness validate`
+- Standard verification: `npx @caesarlo/sdlc-harness validate` checks `feature_list.json`
+  and its evidence; it does not run project code. If `harness.config.json`'s `commands`
+  are configured, `npx @caesarlo/sdlc-harness env check` is what proves the project
+  itself installs, builds, and runs — fill in the actual project test/build command here
+  once `commands` is set: (none configured yet)
 - Current blocker: None.
 
 ## Session Log

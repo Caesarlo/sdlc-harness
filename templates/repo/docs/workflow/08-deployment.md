@@ -1,5 +1,17 @@
 # Stage 8: Deployment
 
+## When This Stage Applies
+Governed by `harness.config.json`'s `deploymentMode`:
+- **`"required"`** (default) — this stage applies to every milestone; skipping it is not
+  an option.
+- **`"optional"`** — apply it when the milestone actually ships something deployable;
+  skip it (and say so in `progress.md`) for milestones that don't, e.g. internal
+  refactors with no release-facing change.
+- **`"none"`** — for projects with no deployment target at all (libraries, CLIs consumed
+  via package manager, internal scripts). Skip this stage entirely; the milestone's
+  `*-RELEASE-001` placeholder, if any, should be removed or replaced with a publish
+  checklist appropriate to the project instead.
+
 ## Inputs
 - A milestone whose features have all passed self-acceptance testing (stage 7).
 
@@ -49,5 +61,5 @@
 - The concrete release-checklist features decomposed from `*-RELEASE-001` are all
   `passing`, with evidence pointing at the actual deployment and its post-deploy health
   check (or an explicit, approved decision to defer a given item).
-- `npx sdlc-harness validate` reports no `pass-gate` errors for the milestone (no
+- `npx @caesarlo/sdlc-harness validate` reports no `pass-gate` errors for the milestone (no
   placeholder feature marked `passing`).
