@@ -8,6 +8,8 @@ whole story.
 
 ## US-1: <short title>
 
+Source Requirements: `FR-1` (and any relevant `NFR-N` IDs).
+
 As a <role>, I want <capability>, so that <outcome>.
 
 Acceptance Criteria (aim for 1-3; 4 or more is a signal the story should be split — see

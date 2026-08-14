@@ -12,6 +12,9 @@
 - Write user stories in the form "As a <role>, I want <capability>, so that <outcome>.",
   using `docs/product/user-stories-template.md` as the shape: a stable `US-N` ID per
   story, and stable `US-N.AC-N` IDs for its acceptance criteria.
+- Give every story an explicit `Source Requirements` line containing the approved
+  `FR-N`/`NFR-N` IDs it serves. This is machine-read by the traceability matrix; prose
+  that merely resembles a requirement is not a trace link.
 - Write acceptance criteria in Given/When/Then form. That structure maps directly onto a
   feature's `verification` entry in stage 4 — free prose does not.
 - Keep each story to 1-3 acceptance criteria. A story needing 4 or more is a signal to
@@ -28,4 +31,5 @@
 - Every acceptance criterion is concrete enough to become a feature's `verification`
   entry in stage 4 without rewriting.
 - No story has 4+ acceptance criteria without a documented reason it wasn't split.
+- `sdlc-harness traceability` reports no orphan story or unknown requirement reference.
 - The user has reviewed and approved the story set.
