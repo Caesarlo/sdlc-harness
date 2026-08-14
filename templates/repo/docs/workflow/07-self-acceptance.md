@@ -9,7 +9,8 @@
   black-box check exercising it — a stack of unit tests alone is not self-acceptance.
 - Investigate and fix any regression before proceeding; do not mark anything `passing`
   on top of a failing baseline.
-- **Isolated acceptance pass**: dispatch a fresh subagent with only the milestone's
+- **Isolated acceptance pass**: when the Agent runtime supports subagents, dispatch a
+  fresh subagent with only the milestone's
   `objective`, the relevant `US-N.AC-N` acceptance criteria, and each feature's
   `behavior` — not the implementation history or the controlling session's notes on how
   anything was built. The same context that just implemented the milestone is prone to
@@ -18,6 +19,11 @@
   can't see. This subagent performs the exploratory pass below and the acceptance-
   criteria walk; it does not re-run the declared verification suite (the controlling
   session already did that).
+- **Single-Agent fallback**: if the runtime cannot dispatch subagents, use a fresh
+  context/session that receives only the same acceptance packet. If even a fresh
+  context is unavailable, pause for an independent human or CI-backed acceptance
+  review and record who performed it. Never silently treat the implementing context's
+  own exploratory pass as isolated acceptance.
 - **Exploratory testing**: beyond the declared `verification` entries (which only prove
   the scenarios someone already thought to write down), the isolated subagent spends a
   round on unscripted exploration — boundary values, error paths, unexpected input,
@@ -48,7 +54,7 @@
   including any findings logged to `docs/product/feedback-log.md`.
 
 ## Exit Conditions
-- `npx sdlc-harness validate` passes.
+- `npx @caesarlo/sdlc-harness validate` passes.
 - The full test/verification suite for the milestone passes, with the end-to-end check
   included.
 - Every `US-N.AC-N` the milestone claims now has a recorded, isolated confirmation that
