@@ -49,7 +49,7 @@
   milestone.
 
 ## Exit Conditions
-- `npx sdlc-harness validate` reports no `milestone-order` errors (no feature depends on
+- `npx @caesarlo/sdlc-harness validate` reports no `milestone-order` errors (no feature depends on
   a feature in a later milestone).
 - The first milestone includes at least one feature whose `verification` is an
   end-to-end check (exercises more than one architectural layer), not only

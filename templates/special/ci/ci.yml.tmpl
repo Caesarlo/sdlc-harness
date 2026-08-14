@@ -28,7 +28,7 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
-      - run: npx sdlc-harness validate
+      - run: npx @caesarlo/sdlc-harness validate
       # This step intentionally fails until the real lint/type-check/test/build
       # commands for {{projectName}} are wired in below — a CI workflow that can
       # go green without ever running a real check is worse than no CI at all.

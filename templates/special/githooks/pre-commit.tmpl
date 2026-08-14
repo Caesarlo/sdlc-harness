@@ -2,7 +2,7 @@
 # Installed by sdlc-harness. Blocks commits that touch feature_list.json without
 # passing validation.
 if git diff --cached --name-only | grep -q '^feature_list.json$'; then
-  npx sdlc-harness validate
+  npx @caesarlo/sdlc-harness validate
   if [ $? -ne 0 ]; then
     echo "sdlc-harness validate failed; fix feature_list.json before committing." >&2
     exit 1

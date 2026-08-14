@@ -42,6 +42,6 @@
   key dependencies, links to the ADRs that explain each decision).
 
 ## Exit Conditions
-- `npx sdlc-harness validate` reports no `adr-coverage` errors for the topics configured
+- `npx @caesarlo/sdlc-harness validate` reports no `adr-coverage` errors for the topics configured
   in `harness.config.json`.
 - The user has reviewed and approved the architecture decisions.
