@@ -4,8 +4,8 @@
 - One feature with status `not_started` and all dependencies `passing`.
 
 ## What The Agent Does
-- Mark exactly one feature `in_progress` per owner (the pass-gate validator rejects more
-  than one `in_progress` feature for the same `owner`).
+- Run `sdlc-harness feature start <feature-id>` to atomically claim the feature and move
+  it to `in_progress`. Do not make this state transition by editing JSON.
 - Read `harness.config.json`'s `testStrategy` and follow the matching path below. If the
   field is absent, `isolated-tdd` is the default.
 
@@ -42,7 +42,10 @@
 - Write the failing test and the implementation in the same session, in that order
   (test first, confirm RED, then implement to GREEN). No subagent split is required.
   Use this when the added isolation cost of separate test-writer/implementer dispatches
-  isn't worth it for the project's size or risk profile.
+  isn't worth it for the project's size or risk profile — or when the Agent runtime
+  running this project cannot dispatch subagents at all. Set `testStrategy:
+  "in-session-tdd"` in `harness.config.json` in that case rather than attempting the
+  isolated split and silently skipping the subagent dispatches.
 
 ### `testStrategy: "team-default"`
 - Follow whatever test methodology the project's own contributing docs or CI already
@@ -59,9 +62,11 @@
   not.
 - **Review gate**: after refactoring, dispatch a reviewer (fresh subagent or the
   controlling session acting in a reviewer role) to check the diff against the
-  feature's behavior, plus a security pass. Record the outcome as an `evidence` entry
-  with `kind: "review"` — this is required before the feature can move to `passing`,
-  regardless of which `testStrategy` was used to get there.
+  feature's behavior, plus a security pass. Record the outcome with `sdlc-harness review
+  record <feature-id> --summary "<findings>" --reviewer <id>`. After all declared
+  verification has passing evidence, run `sdlc-harness feature complete <feature-id>`;
+  it atomically checks the active claim, dependencies, current-commit verification and
+  review evidence before moving the feature to `passing`.
 
 ## Required Output Artifacts
 - The implementation, its tests, and a review evidence entry recorded on the feature.
@@ -69,3 +74,4 @@
 ## Exit Conditions
 - The feature's declared verification passes.
 - `evidence` includes the verification result and a `kind: "review"` entry.
+- `sdlc-harness feature complete <feature-id>` succeeds.

@@ -30,8 +30,19 @@ export function validatePassGate(data, previousSnapshot) {
       errors.push(`Feature ${feature.id} is passing but has no evidence`);
       continue;
     }
-    if (!evidence.some((e) => e.kind === 'review')) {
-      errors.push(`Feature ${feature.id} is passing but has no evidence entry with kind "review"`);
+    if (!evidence.some((e) => e.kind === 'review' && e.result === 'passed')) {
+      errors.push(`Feature ${feature.id} is passing but has no passing review evidence`);
+    }
+    const hasSuccessfulCiRun = evidence.some((e) => e.kind === 'test' && e.result === 'passed' && e.ci);
+    for (const [index, verification] of (feature.verification || []).entries()) {
+      const hasEvidence = verification.type === 'manual'
+        ? evidence.some((e) => e.kind === 'manual' && e.verification_index === index + 1 && e.result === 'passed')
+        : hasSuccessfulCiRun || evidence.some((e) => (
+          e.kind === 'test' && e.command === verification.command && e.result === 'passed'
+        ));
+      if (!hasEvidence) {
+        errors.push(`Feature ${feature.id} is passing but verification ${index + 1} has no passing evidence`);
+      }
     }
   }
 

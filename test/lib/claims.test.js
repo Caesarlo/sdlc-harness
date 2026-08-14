@@ -178,6 +178,25 @@ test('claimNextFeature picks a ready feature and skips ones with unmet dependenc
   assert.equal(claim.feature_id, 'M0-FEAT-002');
 });
 
+test('listReadyFeatures sorts by priority (lower first), unprioritized features last in list order', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  const featureListPath = seedRepo(dir, {
+    rules: { wip_limit_per_owner: 5 },
+    features: [
+      { id: 'M0-FEAT-NOPRI-A', milestone: 'M0', behavior: 'a', status: 'not_started', dependencies: [], verification: [], evidence: [] },
+      { id: 'M0-FEAT-LOW', milestone: 'M0', priority: 50, behavior: 'b', status: 'not_started', dependencies: [], verification: [], evidence: [] },
+      { id: 'M0-FEAT-NOPRI-B', milestone: 'M0', behavior: 'c', status: 'not_started', dependencies: [], verification: [], evidence: [] },
+      { id: 'M0-FEAT-HIGH', milestone: 'M0', priority: 1, behavior: 'd', status: 'not_started', dependencies: [], verification: [], evidence: [] },
+    ],
+  });
+
+  const ready = listReadyFeatures(JSON.parse(fs.readFileSync(featureListPath, 'utf8')));
+  assert.deepEqual(ready.map((f) => f.id), ['M0-FEAT-HIGH', 'M0-FEAT-LOW', 'M0-FEAT-NOPRI-A', 'M0-FEAT-NOPRI-B']);
+
+  const claim = claimNextFeature(dir, { owner: 'alice' });
+  assert.equal(claim.feature_id, 'M0-FEAT-HIGH');
+});
+
 test('claimNextFeature throws NoReadyFeatureError when nothing qualifies', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
   seedRepo(dir, {

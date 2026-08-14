@@ -5,6 +5,7 @@ import { appendEvent } from '../lib/events.js';
 import { FeatureNotFoundError } from '../lib/errors.js';
 import { loadConfig } from '../lib/config.js';
 import { claimFeature, releaseFeature } from '../lib/claims.js';
+import { currentCommitSha } from '../lib/current-commit.js';
 
 export { FeatureNotFoundError };
 
@@ -23,11 +24,16 @@ function isLeaseExpired(claim, now = Date.now()) {
 // In team mode this is a no-op — the caller is expected to already hold a
 // claim via `sdlc-harness claim`.
 function ensureClaimedForVerify(repoRoot, featureId, config) {
-  if (config.collaborationMode !== 'solo') return { autoClaimed: false };
-
   const { data } = readJsonWithStamp(path.join(repoRoot, 'feature_list.json'));
   const feature = data.features.find((f) => f.id === featureId);
   if (!feature) throw new FeatureNotFoundError(featureId);
+
+  if (config.collaborationMode !== 'solo') {
+    if (!feature.claim || isLeaseExpired(feature.claim)) {
+      throw new Error(`Feature ${featureId} must have an active claim before verification in team mode`);
+    }
+    return { autoClaimed: false };
+  }
 
   if (feature.claim && !isLeaseExpired(feature.claim) && feature.claim.owner !== config.defaultOwner) {
     throw new Error(
@@ -41,13 +47,12 @@ function ensureClaimedForVerify(repoRoot, featureId, config) {
   return { autoClaimed: false };
 }
 
-function currentCommitSha(repoRoot) {
-  const result = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' });
-  if (result.status !== 0 || !result.stdout) return null;
-  return result.stdout.trim();
-}
-
 function runOneVerification(repoRoot, verification, exec) {
+  if (verification.type === 'manual') {
+    throw new Error(
+      'Manual verification cannot be executed as a shell command; use "sdlc-harness evidence manual" to record it',
+    );
+  }
   const result = exec(verification.command, { cwd: repoRoot, shell: true, encoding: 'utf8' });
   return {
     command: verification.command,
@@ -78,6 +83,11 @@ export function runVerify(repoRoot, featureId, { exec = spawnSync } = {}) {
     if (!feature) throw new FeatureNotFoundError(featureId);
 
     const verifications = feature.verification || [];
+    if (verifications.some((verification) => verification.type === 'manual')) {
+      throw new Error(
+        `Feature ${featureId} contains manual verification; record it with "sdlc-harness evidence manual" instead of executing it as shell code`,
+      );
+    }
     const results = verifications.map((v) => runOneVerification(repoRoot, v, exec));
     const ok = results.length > 0 && results.every((r) => r.exitCode === 0);
     const commitSha = currentCommitSha(repoRoot);

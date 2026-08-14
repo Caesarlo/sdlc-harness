@@ -66,23 +66,23 @@ test('rejects a passing feature with evidence but no review entry', () => {
   const data = { features: [feature({ status: 'passing', evidence: [{ kind: 'test-run' }] })] };
   const result = validatePassGate(data, null);
   assert.equal(result.ok, false);
-  assert.match(result.errors.join(' '), /no evidence entry with kind "review"/);
+  assert.match(result.errors.join(' '), /no passing review evidence/);
 });
 
 test('accepts a passing feature with review evidence', () => {
-  const data = { features: [feature({ status: 'passing', evidence: [{ kind: 'test-run' }, { kind: 'review' }] })] };
+  const data = { features: [feature({ status: 'passing', evidence: [{ kind: 'review', result: 'passed' }] })] };
   assert.deepEqual(validatePassGate(data, null), { ok: true, errors: [] });
 });
 
 test('rejects a SCOPE placeholder marked passing', () => {
-  const data = { features: [feature({ id: 'M2-SCOPE-001', status: 'passing', evidence: [{ kind: 'review' }] })] };
+  const data = { features: [feature({ id: 'M2-SCOPE-001', status: 'passing', evidence: [{ kind: 'review', result: 'passed' }] })] };
   const result = validatePassGate(data, null);
   assert.equal(result.ok, false);
   assert.match(result.errors.join(' '), /must never be marked passing/);
 });
 
 test('rejects a regression against the previous snapshot (passing_is_monotonic)', () => {
-  const previousSnapshot = { features: [feature({ status: 'passing', evidence: [{ kind: 'review' }] })] };
+  const previousSnapshot = { features: [feature({ status: 'passing', evidence: [{ kind: 'review', result: 'passed' }] })] };
   const data = { features: [feature({ status: 'blocked' })] };
   const result = validatePassGate(data, previousSnapshot);
   assert.equal(result.ok, false);

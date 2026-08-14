@@ -128,10 +128,19 @@ test('verify refuses to run when another owner actively holds the claim, even in
   assert.equal(saved.features[0].evidence.length, 0);
 });
 
-test('verify does not auto-claim or auto-release in team mode, and requires a pre-existing claim to have been made deliberately', () => {
+test('verify requires an active claim in team mode and does not auto-release it', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
   fs.writeFileSync(path.join(dir, 'harness.config.json'), JSON.stringify({ collaborationMode: 'team' }));
   const featureListPath = seedRepo(dir, [{ type: 'automated', command: NODE_TRUE, expected: 'exit 0' }]);
+
+  assert.throws(() => runVerify(dir, 'M0-FEAT-001'), /must have an active claim/);
+
+  const data = JSON.parse(fs.readFileSync(featureListPath, 'utf8'));
+  data.features[0].claim = {
+    id: 'team-claim', owner: 'agent', actor_id: 'agent',
+    claimed_at: new Date().toISOString(), lease_until: new Date(Date.now() + 60_000).toISOString(),
+  };
+  fs.writeFileSync(featureListPath, JSON.stringify(data, null, 2) + '\n');
 
   const result = runVerify(dir, 'M0-FEAT-001');
   assert.equal(result.ok, true);
@@ -143,7 +152,21 @@ test('verify does not auto-claim or auto-release in team mode, and requires a pr
   assert.deepEqual(events.map((e) => e.type), ['feature.verified']);
 
   const saved = JSON.parse(fs.readFileSync(featureListPath, 'utf8'));
-  assert.equal(saved.features[0].claim, undefined);
+  assert.equal(saved.features[0].claim.id, 'team-claim');
+});
+
+test('verify refuses manual verification before executing any command', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  seedRepo(dir, [
+    { type: 'automated', command: NODE_TRUE, expected: 'exit 0' },
+    { type: 'manual', command: 'Confirm the UI looks correct', expected: 'UI is correct' },
+  ]);
+  let executions = 0;
+  assert.throws(
+    () => runVerify(dir, 'M0-FEAT-001', { exec: () => { executions += 1; return { status: 0 }; } }),
+    /contains manual verification/,
+  );
+  assert.equal(executions, 0);
 });
 
 test('verify in solo mode does not release a claim that already existed before this call', () => {

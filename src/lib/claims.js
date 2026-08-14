@@ -95,21 +95,41 @@ function newClaimRecord({ owner, actorId, ttlMinutes, extra = {} }) {
   };
 }
 
-// Features eligible for `claim --next`: not started, not currently under an
-// unexpired claim, and every dependency is passing.
-export function listReadyFeatures(data) {
-  const passingIds = new Set((data.features || []).filter((f) => f.status === 'passing').map((f) => f.id));
-  return (data.features || []).filter((f) => {
-    if (f.status !== 'not_started') return false;
-    if (f.claim && !isLeaseExpired(f.claim)) return false;
-    return (f.dependencies || []).every((d) => passingIds.has(d));
-  });
+// Lower `priority` runs first. Features with no `priority` sort after every
+// prioritized feature, in their original list order — so repos that never
+// set priority keep the old "array order is priority" behavior unchanged.
+function priorityRank(feature) {
+  return typeof feature.priority === 'number' ? feature.priority : Number.POSITIVE_INFINITY;
 }
 
-export function claimFeature(repoRoot, featureId, { owner, actorId, ttlMinutes = DEFAULT_TTL_MINUTES } = {}) {
+// Features eligible for `claim --next`: not started, not currently under an
+// unexpired claim, and every dependency is passing. Sorted by priority
+// (Array.prototype.sort is stable, so ties keep list order).
+export function listReadyFeatures(data) {
+  const passingIds = new Set((data.features || []).filter((f) => f.status === 'passing').map((f) => f.id));
+  return (data.features || [])
+    .filter((f) => {
+      if (f.status !== 'not_started') return false;
+      if (f.claim && !isLeaseExpired(f.claim)) return false;
+      return (f.dependencies || []).every((d) => passingIds.has(d));
+    })
+    .sort((a, b) => priorityRank(a) - priorityRank(b));
+}
+
+export function claimFeature(repoRoot, featureId, {
+  owner, actorId, ttlMinutes = DEFAULT_TTL_MINUTES, requireReady = false,
+} = {}) {
   const featureListPath = path.join(repoRoot, 'feature_list.json');
   const claim = casTransaction(featureListPath, (data) => {
     const feature = findFeature(data, featureId);
+    if (requireReady) {
+      if (feature.status !== 'not_started') {
+        throw new Error(`Feature ${featureId} is ${feature.status}, not ready to start`);
+      }
+      const passingIds = new Set((data.features || []).filter((f) => f.status === 'passing').map((f) => f.id));
+      const unmet = (feature.dependencies || []).filter((id) => !passingIds.has(id));
+      if (unmet.length > 0) throw new Error(`Feature ${featureId} has unmet dependencies: ${unmet.join(', ')}`);
+    }
     if (feature.claim && !isLeaseExpired(feature.claim)) {
       throw new ClaimConflictError(featureId, feature.claim.owner);
     }
