@@ -7,6 +7,24 @@
     "project": { "type": "string" },
     "schema_version": { "type": "string" },
     "last_updated": { "type": "string" },
+    "evidence": {
+      "type": "array",
+      "description": "Project/artifact-level evidence. Feature implementation evidence remains on each feature.",
+      "items": {
+        "type": "object",
+        "required": ["kind", "result", "recorded_at"],
+        "properties": {
+          "kind": { "type": "string" },
+          "result": { "type": "string" },
+          "artifact": { "type": "string" },
+          "actor": { "type": "string" },
+          "summary": { "type": "string" },
+          "content_hash": { "type": "string" },
+          "commit_sha": { "type": ["string", "null"] },
+          "recorded_at": { "type": "string" }
+        }
+      }
+    },
     "rules": {
       "type": "object",
       "properties": {
@@ -45,6 +63,10 @@
           "id": { "type": "string" },
           "milestone": { "type": "string" },
           "area": { "type": "string" },
+          "priority": {
+            "type": "integer",
+            "description": "Lower runs first. Used by `claim --next` and `feature start`'s ready-feature ordering; features without a priority sort after prioritized ones, in list order."
+          },
           "title": { "type": "string" },
           "behavior": { "type": "string" },
           "owner": {
@@ -87,9 +109,14 @@
               "type": "object",
               "required": ["type", "command", "expected"],
               "properties": {
-                "type": { "type": "string" },
+                "type": { "enum": ["automated", "manual"] },
                 "command": { "type": "string" },
-                "expected": { "type": "string" }
+                "expected": { "type": "string" },
+                "source_refs": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "Acceptance criteria verified by this exact check, e.g. docs/product/user-stories.md#US-1.AC-1."
+                }
               }
             }
           },
@@ -102,7 +129,17 @@
                 "kind": { "type": "string" },
                 "command": { "type": "string" },
                 "result": { "type": "string" },
-                "recorded_at": { "type": "string" }
+                "recorded_at": { "type": "string" },
+                "exit_code": { "type": "integer" },
+                "commit_sha": { "type": ["string", "null"] },
+                "verification_index": { "type": "integer", "minimum": 1 },
+                "reviewer": { "type": "string" },
+                "summary": { "type": "string" },
+                "actor": { "type": "string" },
+                "notes": { "type": "string" },
+                "artifact": { "type": "string" },
+                "content_hash": { "type": "string" },
+                "ci": { "type": "object" }
               }
             }
           },

@@ -8,9 +8,21 @@ const README_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), '..'
 
 test('README documents every CLI command', () => {
   const content = fs.readFileSync(README_PATH, 'utf8');
-  for (const command of ['init', 'adopt', 'validate', 'status', 'new-feature', 'new-milestone', 'verify', 'claim', 'release', 'workspace', 'provider github check', 'evidence import']) {
+  for (const command of [
+    'init', 'adopt', 'validate', 'status', 'traceability', 'new-feature', 'new-milestone',
+    'feature start', 'feature complete', 'feature block', 'feature reopen',
+    'verify', 'review record', 'claim', 'release', 'workspace',
+    'provider github check', 'evidence import', 'evidence manual', 'evidence approval',
+    'env check', 'session close', 'feedback log',
+  ]) {
     assert.match(content, new RegExp(`sdlc-harness ${command}`));
   }
+});
+
+test('README quickstart uses the scoped package and never executes the conflicting unscoped npm package', () => {
+  const content = fs.readFileSync(README_PATH, 'utf8');
+  assert.match(content, /npx @caesarlo\/sdlc-harness adopt/);
+  assert.doesNotMatch(content, /npx sdlc-harness/);
 });
 
 test('README lists all 9 stages by name', () => {

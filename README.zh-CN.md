@@ -12,7 +12,7 @@
   <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.0-f59e0b?style=flat-square&labelColor=262626" alt="版本 0.1.0"></a>
   <a href="package.json"><img src="https://img.shields.io/badge/Node.js-%3E%3D22-339933?style=flat-square&logo=nodedotjs&logoColor=white&labelColor=262626" alt="Node.js 22 或更高版本"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2563eb?style=flat-square&labelColor=262626" alt="MIT 许可证"></a>
-  <a href="https://sdlc-harness.mintlify.site/sdlc-harness-docs"><img src="https://img.shields.io/badge/docs-sdlc--harness.mintlify.site-8b5cf6?style=flat-square&labelColor=262626" alt="文档站点"></a>
+  <a href="https://www.gump.top/sdlc-harness-docs/"><img src="https://img.shields.io/badge/docs-www.gump.top-8b5cf6?style=flat-square&labelColor=262626" alt="文档站点"></a>
 </p>
 
 <p align="center">
@@ -32,10 +32,10 @@
   <a href="#快速开始">快速开始</a>  · 
   <a href="#完整-sdlc-工作流">工作流</a>  · 
   <a href="#命令">命令</a>  · 
-  <a href="https://sdlc-harness.mintlify.site/sdlc-harness-docs">完整文档</a>
+  <a href="https://www.gump.top/sdlc-harness-docs/">完整文档</a>
 </p>
 
-<p align="center"><code>npx sdlc-harness adopt</code></p>
+<p align="center"><code>npx @caesarlo/sdlc-harness adopt</code></p>
 
 **软件开发生命周期**（Software Development Life Cycle，SDLC）是软件从需求与架构设计，经过
 实现、验证和部署，再到上线后反馈的完整过程。`sdlc-harness` 将这套过程转化为一套安装在代码
@@ -65,25 +65,28 @@ Claude Code 还会获得轻量的 skill 包装，方便发现和调用各个阶�
 需要 **Node.js 22 或更高版本**。
 
 > [!TIP]
-> `adopt` 只创建缺失文件，不会覆盖已有文件；被跳过的文件会列出来供你手动检查。
+> `adopt` 只创建缺失文件，不会覆盖已有文件；被跳过的文件会列出来供你手动检查。如果仓库
+> 已经有自己的 `AGENTS.md`，adopt 不会修改它，而是把 harness 的路由/规则内容写入
+> `AGENTS.sdlc-harness.md`，并提示你需要在已有的 `AGENTS.md` 里加一行引用。在补上这行引用
+> 之前，`validate` 会一直报 `agents-onboarding` 错误，所以这件事不会被悄悄遗忘。
 
 ### 添加到已有仓库
 
 ```bash
 cd your-project
-npx sdlc-harness adopt
+npx @caesarlo/sdlc-harness adopt
 git config core.hooksPath .githooks
-npx sdlc-harness validate
-npx sdlc-harness status
+npx @caesarlo/sdlc-harness validate
+npx @caesarlo/sdlc-harness status
 ```
 
 ### 在空仓库中开始
 
 ```bash
 mkdir your-project && cd your-project
-npx sdlc-harness init
+npx @caesarlo/sdlc-harness init
 git config core.hooksPath .githooks
-npx sdlc-harness validate
+npx @caesarlo/sdlc-harness validate
 ```
 
 然后让你的编码 Agent 先阅读 `AGENTS.md`，协助定义或拆解第一个实际里程碑。
@@ -117,7 +120,7 @@ flowchart LR
 `status` 为 Agent 和开发者提供同一份机器可读的当前工作视图：
 
 ```bash
-npx sdlc-harness status
+npx @caesarlo/sdlc-harness status
 ```
 
 ```json
@@ -160,7 +163,11 @@ FAILED with 1 error(s):
 - 每个 `passing` 功能都有证据和一条 `review` 记录；
 - 完成状态单调递增：之前已经通过的功能不能悄悄退回未完成状态；
 - ADR 覆盖 `harness.config.json` 要求的主题；
-- 非占位功能的 `source_refs` 指向真实文件。
+- 非占位功能的 `source_refs` 指向真实文件；
+- 追踪矩阵中不存在需求/故事/验收标准的缺口——规划占位符拆分完成后，漏覆盖的需求、
+  孤立故事、孤立功能、未关联验证的验收标准都会让 `validate` 失败；
+- 每一条 artifact 级批准（`sdlc-harness evidence approval`）仍然匹配其批准文件当前的
+  SHA-256 内容哈希。
 
 验证成功后，当前功能状态会记录在 `.harness/` 下，供后续验证检测状态倒退——`passing_is_monotonic`
 检查优先使用 git 历史（`origin/main`/`main`，或 `$HARNESS_BASE_REF`/`$GITHUB_BASE_REF`）而不是本地
@@ -176,10 +183,12 @@ gitignore；脚手架生成的 `.gitignore` 就是这么配置的。
 
 ## 完整 SDLC 工作流
 
-仓库包含九个阶段指南，但它们不是一条必经流水线。第 4、6、7、8、9 阶段是任何功能都
+仓库包含九个阶段指南，但它们不是一条必经流水线。第 4、6、7 阶段是任何功能都
 **必须经过**的核心循环；第 1、2、3、5 阶段是**按需触发**的——每个阶段文档开头都写明了
 何时适用，`AGENTS.md` 的 Routing Map 也会告诉 Agent 应该从哪个阶段进入（新能力、小
-修复、生产事故，还是继续一个已有功能）。
+修复、生产事故，还是继续一个已有功能）。第 8、9 阶段则由 `harness.config.json` 的
+`deploymentMode`/`observabilityMode` 控制（默认都是必须，已有仓库行为不变）——没有部署
+目标或发布后受众的库、CLI、内部脚本可以把两者设为 `"none"`，跳过不适用的阶段。
 
 1. 需求（Requirements）*（范围不明确时）*
 2. 架构与技术设计（Architecture & Technical Design，ADR）*（改动影响架构时）*
@@ -188,8 +197,8 @@ gitignore；脚手架生成的 `.gitignore` 就是这么配置的。
 5. 里程碑规划（Milestone Planning）*（确实需要新规划或重新排序时）*
 6. 敏捷开发（Agile Development，TDD）— **必须**
 7. 自验收测试（Self-Acceptance Testing）— **必须**
-8. 部署（Deployment）— **必须**
-9. 可观测性与反馈闭环（Observability & Feedback Loop）— **必须**
+8. 部署（Deployment）*（由 `deploymentMode` 决定；默认必须）*
+9. 可观测性与反馈闭环（Observability & Feedback Loop）*（由 `observabilityMode` 决定；默认必须）*
 
 ```mermaid
 flowchart TB
@@ -246,10 +255,19 @@ git config core.hooksPath .githooks
 | `sdlc-harness init`          | 在空仓库或新仓库中生成完整 harness。               |
 | `sdlc-harness adopt`         | 添加缺失的 harness 文件，不覆盖已有文件。          |
 | `sdlc-harness validate`      | 运行全部结构与治理检查；失败时以非零状态退出。     |
-| `sdlc-harness status`        | 以 JSON 输出里程碑数量、各状态功能数量和当前功能。 |
-| `sdlc-harness new-feature`   | 通过交互问答向`feature_list.json` 添加功能。     |
+| `sdlc-harness status`        | 以 JSON 输出功能状态、artifact 批准状态、追踪缺口和建议的下一步动作。 |
+| `sdlc-harness traceability`  | 以 JSON 输出需求 → US → AC → feature → verification 追踪矩阵；规划占位符拆分完成后，存在漏覆盖或孤立项时非零退出。 |
+| `sdlc-harness new-feature`   | 通过交互问答向 `feature_list.json` 添加功能，供人工调试使用。 |
+| `sdlc-harness new-feature --input <json-file>` | 面向 Agent 的非交互创建方式；输入必须是仓库内 JSON，且不能注入 claim、evidence、workspace 或已完成状态。 |
 | `sdlc-harness new-milestone` | 通过交互问答向`feature_list.json` 添加里程碑。   |
+| `sdlc-harness feature start <feature-id>` | 原子认领一个 ready 功能并推进到 `in_progress`。 |
+| `sdlc-harness feature complete <feature-id>` | 原子检查有效 claim、依赖、当前提交上的验证证据和后置 review，再推进到 `passing`。 |
+| `sdlc-harness feature block <feature-id> --reason <text>` | 记录阻塞原因、释放 claim 并推进到 `blocked`。 |
+| `sdlc-harness feature reopen <feature-id>` | 清除阻塞，将功能恢复到 `not_started`。 |
 | `sdlc-harness verify <feature-id>` | 真正运行一个功能声明的验证命令，并记录真实的通过/失败证据（含退出码和 commit sha）——这是添加“测试类”证据唯一支持的方式。 |
+| `sdlc-harness evidence manual <feature-id> ...` | 为声明为 `manual` 的检查记录具名证据，不把描述当 shell 命令执行。 |
+| `sdlc-harness evidence approval <artifact> --actor <id> --summary <text>` | 将人的业务批准记录为项目级 evidence，绑定 artifact 的 SHA-256 内容哈希和当前 commit；文件变化后批准自动失效，重新批准前 `validate` 失败。 |
+| `sdlc-harness review record <feature-id> ...` | 记录绑定当前 commit 的结构化 review 证据。 |
 | `sdlc-harness claim <feature-id>` | 原子化地认领一个功能（设置 `owner`，把状态从 `not_started` 推进到 `in_progress`），受 owner 的 WIP 上限约束。 |
 | `sdlc-harness claim --next` | 原子化地认领优先级最高的可认领功能（未开始、依赖已通过、未被占用）。 |
 | `sdlc-harness claim renew <feature-id>` | 在租约过期前续期。 |
@@ -259,6 +277,10 @@ git config core.hooksPath .githooks
 | `sdlc-harness workspace remove <feature-id>` | 移除一个 workspace。如果存在未提交或未推送的内容会拒绝执行（加 `--force` 强制覆盖）。 |
 | `sdlc-harness workspace prune` | 移除 claim 已释放或已过期的 workspace；有未提交/未推送内容的会跳过并报告，而不是被强制删除。永远不会碰仍在有效 claim 下的 workspace。 |
 | `sdlc-harness workspace status` | 以 JSON 形式列出所有 workspace 及其 claim/磁盘状态。 |
+| `sdlc-harness env` | 列出 `harness.config.json` 的 `commands` 字段中配置的项目级环境命令。 |
+| `sdlc-harness env check` | 真正运行配置好的 `bootstrap`/`verify`/`e2e`/`health` 命令（按此顺序），遇到第一个失败就停止——用来证明项目本身能装、能编译、能跑，而不仅仅是 `feature_list.json` 结构合法。 |
+| `sdlc-harness session close` | 只读的会话收尾报告：运行 `validate`、运行 `env check`（如已配置）、汇总 git 状态和 `status` 的 ready/blocked/next-action 视图——`validate` 失败或某个已配置的环境命令失败时以非零状态退出。 |
+| `sdlc-harness feedback log --source <text> --severity <S1\|S2\|S3\|S4> --observation <text> --disposition <Actioned\|Deferred\|Declined\|Monitoring> [--detail <text>]` | 向 `docs/product/feedback-log.md`（第 9 阶段）追加一条格式正确的记录——从结构上保证格式正确，而不是依赖手写 Markdown；即便有人手改了日志，`validate` 也会检查格式。 |
 
 所有 claim 相关命令都支持 `--owner <name>`（默认取 `harness.config.json` 的 `defaultOwner`）、
 `--actor <id>`（用来区分同一个 owner 名下的多个 Agent 会话——claim 的唯一性始终按 feature 判断，
@@ -289,12 +311,33 @@ ruleset）在 token 权限不足时会报告 `unknown` 而不是 `fail`——这
 
 `harness.config.json` 的 `collaborationMode` 字段决定 claim/lease 是否对用户可见：
 
-- **`"solo"`**（默认）：你不需要自己运行 `claim`/`release`。`sdlc-harness verify` 会在运行前
-  自动为 `defaultOwner` 认领该功能，运行结束后自动释放，整个过程对用户不可见——底层的
-  CAS/claim 安全机制依然生效，只是从不暴露出来。如果该功能正被另一个 owner 有效认领着，
-  `verify` 仍然会拒绝运行，而不是和对方抢着写 evidence。
-- **`"team"`**：`verify` 从不隐式管理 claim。需要先显式认领一个功能（`sdlc-harness claim
-  <feature-id>` 或 `claim --next`），再运行 `verify`。
+- **`"solo"`**（默认）：使用高层的 `feature start` 和 `feature complete` 命令即可，不需要
+  用到底层的 `claim`/`release`。临时的 `verify` 仍然可以自动认领，但要真正完成功能，
+  始终需要先明确执行过 `feature start`，让生命周期的归属可被观察到。
+- **`"team"`**：使用同一组高层 feature 命令，或者在协调多个并发 Agent/机器时使用底层的
+  claim 和 workspace 命令。
+
+### 项目环境命令
+
+`sdlc-harness validate` 只检查 `feature_list.json` 及其依赖的文档——它从不执行项目代码，
+所以 `validate` 通过并不能证明项目本身能装、能编译、能跑。`harness.config.json` 的
+`commands` 字段用来补上这个缺口：
+
+```json
+{
+  "commands": {
+    "bootstrap": "npm install",
+    "verify": "npm test && npm run lint",
+    "e2e": "npm run test:e2e",
+    "health": "curl -f http://localhost:3000/health"
+  }
+}
+```
+
+四项都是可选的；`sdlc-harness env check` 会按顺序运行已配置的项，遇到第一个失败就停止。
+`start` 和 `cleanup` 也是识别的字段名，但 `env check` 不会运行它们——它们是场景化的操作
+（启动一个长期运行的开发服务器、清理状态），而不是通过/失败检查；需要时直接引用即可。
+`commands` 留空时行为和现在完全一样——`env check` 会报告“未配置任何命令”而不是失败。
 
 ## Agent 兼容性
 

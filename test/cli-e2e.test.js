@@ -55,6 +55,34 @@ test('new-feature with a duplicate id exits non-zero with a clean error, not a r
   assert.equal(threw, true);
 });
 
+test('Agent can create a feature non-interactively and record artifact approval through the CLI', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  execFileSync('node', [CLI, 'init'], { cwd: dir });
+  fs.writeFileSync(path.join(dir, 'feature.json'), JSON.stringify({
+    id: 'M0-FEAT-AGENT',
+    milestone: 'M0',
+    title: 'Agent input',
+    behavior: 'Agent can create features without answering prompts',
+    dependencies: [],
+    verification: [{ type: 'automated', command: 'node --version', expected: 'exit 0' }],
+    source_refs: ['docs/workflow/04-feature-breakdown.md'],
+  }));
+
+  const created = JSON.parse(execFileSync(
+    'node', [CLI, 'new-feature', '--input', 'feature.json'], { cwd: dir },
+  ).toString());
+  assert.equal(created.id, 'M0-FEAT-AGENT');
+
+  const approvalOut = execFileSync('node', [
+    CLI, 'evidence', 'approval', 'docs/product/requirements-template.md',
+    '--actor', 'human:owner', '--summary', 'Template shape approved',
+  ], { cwd: dir }).toString();
+  assert.match(approvalOut, /Recorded approval/);
+
+  const status = JSON.parse(execFileSync('node', [CLI, 'status'], { cwd: dir }).toString());
+  assert.equal(status.artifactApprovals[0].valid, true);
+});
+
 test('verify runs the declared command via the CLI binary, exits non-zero on failure, and records real evidence', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
   const featureListPath = path.join(dir, 'feature_list.json');
@@ -116,6 +144,48 @@ test('claim, release, and claim --next work end-to-end via the CLI binary', () =
 
   const nextOut = execFileSync('node', [CLI, 'claim', '--next'], { cwd: dir }).toString();
   assert.match(nextOut, /Claimed M0-FEAT-001 for agent/);
+});
+
+test('feature start, verify, review, and complete form an atomic Agent lifecycle via the CLI', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  execFileSync('git', ['init', '-b', 'main'], { cwd: dir });
+  execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: dir });
+  execFileSync('git', ['config', 'user.name', 'Test'], { cwd: dir });
+  fs.writeFileSync(path.join(dir, 'harness.config.json'), JSON.stringify({ defaultOwner: 'agent' }));
+  fs.writeFileSync(path.join(dir, 'feature_list.json'), JSON.stringify({
+    project: 'demo', schema_version: '1.0', rules: { wip_limit_per_owner: 1 }, milestones: [{ id: 'M0' }],
+    features: [{
+      id: 'M0-FEAT-001', milestone: 'M0', status: 'not_started', dependencies: [],
+      verification: [{ type: 'automated', command: 'node -e "process.exit(0)"', expected: 'exit 0' }],
+      evidence: [],
+    }],
+  }));
+  execFileSync('git', ['add', '-A'], { cwd: dir });
+  execFileSync('git', ['commit', '-m', 'initial'], { cwd: dir });
+
+  assert.match(
+    execFileSync('node', [CLI, 'feature', 'start', 'M0-FEAT-001'], { cwd: dir }).toString(),
+    /Started M0-FEAT-001/,
+  );
+  assert.match(
+    execFileSync('node', [CLI, 'verify', 'M0-FEAT-001'], { cwd: dir }).toString(),
+    /All verification commands passed/,
+  );
+  assert.match(
+    execFileSync('node', [
+      CLI, 'review', 'record', 'M0-FEAT-001', '--reviewer', 'reviewer', '--summary', 'Behavior and security checked',
+    ], { cwd: dir }).toString(),
+    /Recorded passed review/,
+  );
+  assert.match(
+    execFileSync('node', [CLI, 'feature', 'complete', 'M0-FEAT-001'], { cwd: dir }).toString(),
+    /Completed M0-FEAT-001/,
+  );
+
+  const saved = JSON.parse(fs.readFileSync(path.join(dir, 'feature_list.json'), 'utf8')).features[0];
+  assert.equal(saved.status, 'passing');
+  assert.equal(saved.claim, null);
+  assert.deepEqual(saved.evidence.map((evidence) => evidence.kind), ['test', 'review']);
 });
 
 test('workspace create/status/remove work end-to-end via the CLI binary against a real git repo', () => {

@@ -15,3 +15,10 @@ test('cli with no command prints usage and exits non-zero', () => {
     return true;
   });
 });
+
+test('cli --help succeeds and documents every top-level command group', () => {
+  const output = execFileSync('node', [CLI, '--help'], { stdio: 'pipe' }).toString();
+  for (const command of ['feature', 'review', 'evidence', 'provider', 'workspace', 'traceability']) {
+    assert.match(output, new RegExp(command));
+  }
+});

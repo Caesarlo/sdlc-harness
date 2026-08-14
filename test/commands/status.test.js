@@ -23,6 +23,9 @@ test('status summarizes counts and the active feature', () => {
   assert.equal(status.project, 'demo');
   assert.deepEqual(status.counts, { not_started: 1, in_progress: 1, blocked: 1, passing: 1 });
   assert.deepEqual(status.activeFeatures, [{ id: 'B', title: 'Do the thing', behavior: 'thing happens', owner: null }]);
+  assert.deepEqual(status.readyFeatures.map((f) => f.id), ['C']);
+  assert.deepEqual(status.blockedFeatures.map((f) => f.id), ['D']);
+  assert.match(status.nextActions[0], /Continue B/);
   assert.equal(status.milestoneCount, 2);
 });
 
@@ -32,4 +35,5 @@ test('status reports an empty activeFeatures array when nothing is in_progress',
   fs.writeFileSync(path.join(dir, 'feature_list.json'), JSON.stringify(data));
 
   assert.deepEqual(runStatus(dir).activeFeatures, []);
+  assert.match(runStatus(dir).nextActions[0], /feature start A/);
 });

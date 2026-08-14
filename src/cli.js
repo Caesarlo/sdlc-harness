@@ -1,10 +1,11 @@
 #!/usr/bin/env node
+import fs from 'node:fs';
 import path from 'node:path';
 import { runInit, InitConflictError } from './commands/init.js';
 import { runAdopt } from './commands/adopt.js';
 import { runValidate } from './commands/validate.js';
 import { runStatus } from './commands/status.js';
-import { runNewFeature } from './commands/new-feature.js';
+import { runNewFeature, runNewFeatureFromFile } from './commands/new-feature.js';
 import { runNewMilestone } from './commands/new-milestone.js';
 import { runVerify, FeatureNotFoundError } from './commands/verify.js';
 import { loadConfig } from './lib/config.js';
@@ -15,13 +16,34 @@ import { createWorkspace, removeWorkspace, pruneWorkspaces, listWorkspaces } fro
 import { claimAndPush } from './lib/git-provider.js';
 import { checkGithubRepoConfig, inferGithubRepoFromRemote } from './lib/github-provider.js';
 import { runEvidenceImport } from './commands/evidence-import.js';
+import { recordManualEvidence } from './commands/manual-evidence.js';
+import { recordReview } from './commands/review.js';
+import { startFeature, completeFeature, blockFeature, reopenFeature } from './commands/feature.js';
+import { runEnvCheck } from './lib/env-check.js';
+import { runSessionClose } from './commands/session.js';
+import { recordFeedback } from './commands/feedback.js';
+import { recordArtifactApproval } from './commands/artifact-approval.js';
+import { buildTraceability } from './lib/traceability.js';
 
 const [, , command, ...rest] = process.argv;
 const cwd = process.cwd();
 
-function printUsage() {
-  console.error(`Unknown command: ${command ?? '(none)'}`);
-  console.error('Usage: sdlc-harness <init|adopt|validate|status|new-feature|new-milestone|verify|claim|release|workspace>');
+function printUsage({ unknown = false } = {}) {
+  const write = unknown ? console.error : console.log;
+  if (unknown) write(`Unknown command: ${command ?? '(none)'}`);
+  write('Usage: sdlc-harness <init|adopt|validate|status|traceability|new-feature|new-milestone|feature|verify|review|evidence|claim|release|workspace|provider|env|session|feedback>');
+  write('Run "sdlc-harness help" or "sdlc-harness --help" to show this message.');
+}
+
+function parseValuedArgs(args, valuedFlags) {
+  const flags = {};
+  const positional = [];
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i];
+    if (valuedFlags.has(arg)) flags[arg] = args[(i += 1)];
+    else if (!arg.startsWith('--')) positional.push(arg);
+  }
+  return { flags, positional };
 }
 
 function parseClaimArgs(args) {
@@ -52,6 +74,11 @@ function resolveOwner(explicitOwner) {
 
 async function main() {
   switch (command) {
+    case 'help':
+    case '--help':
+    case '-h':
+      printUsage();
+      break;
     case 'init': {
       const force = process.argv.includes('--force');
       try {
@@ -78,6 +105,13 @@ async function main() {
         console.log('Existing files left untouched (review manually):');
         for (const w of skipped) console.log(`  - ${w.path}`);
       }
+      const sidecar = inserted.find((w) => w.path.endsWith('AGENTS.sdlc-harness.md'));
+      if (sidecar) {
+        console.log('ACTION REQUIRED: this repo already had an AGENTS.md, so the harness\'s');
+        console.log(`routing/rules content was written to ${sidecar.path} instead. Add a`);
+        console.log('one-line reference to it from the existing AGENTS.md, or a fresh Agent');
+        console.log('session will never discover the harness exists.');
+      }
       break;
     }
     case 'validate': {
@@ -95,12 +129,63 @@ async function main() {
       console.log(JSON.stringify(runStatus(cwd), null, 2));
       break;
     }
-    case 'new-feature':
-      await runNewFeature(cwd);
+    case 'traceability': {
+      const data = JSON.parse(fs.readFileSync(path.join(cwd, 'feature_list.json'), 'utf8'));
+      const matrix = buildTraceability(cwd, data);
+      console.log(JSON.stringify(matrix, null, 2));
+      if (!matrix.ok) process.exitCode = 1;
       break;
+    }
+    case 'new-feature': {
+      const { flags } = parseValuedArgs(rest, new Set(['--input']));
+      if (flags['--input']) {
+        const feature = runNewFeatureFromFile(cwd, flags['--input']);
+        console.log(JSON.stringify(feature, null, 2));
+      } else {
+        await runNewFeature(cwd);
+      }
+      break;
+    }
     case 'new-milestone':
       await runNewMilestone(cwd);
       break;
+    case 'feature': {
+      const sub = rest[0];
+      const { flags, positional } = parseValuedArgs(
+        rest.slice(1), new Set(['--owner', '--actor', '--ttl', '--reason']),
+      );
+      const featureId = positional[0];
+      if (!sub || !featureId) {
+        console.error('Usage: sdlc-harness feature <start|complete|block|reopen> <feature-id> [options]');
+        process.exitCode = 1;
+        return;
+      }
+      const owner = resolveOwner(flags['--owner']);
+      try {
+        if (sub === 'start') {
+          const claim = startFeature(cwd, featureId, {
+            owner, actorId: flags['--actor'], ttlMinutes: flags['--ttl'] ? Number(flags['--ttl']) : undefined,
+          });
+          console.log(`Started ${featureId} for ${owner} (lease until ${claim.lease_until}).`);
+        } else if (sub === 'complete') {
+          const result = completeFeature(cwd, featureId, { owner });
+          console.log(`Completed ${featureId}${result.commitSha ? ` at commit ${result.commitSha}` : ''}.`);
+        } else if (sub === 'block') {
+          blockFeature(cwd, featureId, { owner, reason: flags['--reason'] });
+          console.log(`Blocked ${featureId}: ${flags['--reason']}`);
+        } else if (sub === 'reopen') {
+          reopenFeature(cwd, featureId, { actor: flags['--actor'] || owner });
+          console.log(`Reopened ${featureId}.`);
+        } else {
+          throw new Error(`Unknown feature command: ${sub}`);
+        }
+      } catch (err) {
+        console.error(err.message);
+        process.exitCode = 1;
+        return;
+      }
+      break;
+    }
     case 'verify': {
       const featureId = rest.find((arg) => !arg.startsWith('--'));
       if (!featureId) {
@@ -127,6 +212,35 @@ async function main() {
           return;
         }
         throw err;
+      }
+      break;
+    }
+    case 'review': {
+      if (rest[0] !== 'record') {
+        console.error('Usage: sdlc-harness review record <feature-id> --summary <text> [--result passed|failed] [--reviewer <id>]');
+        process.exitCode = 1;
+        return;
+      }
+      const { flags, positional } = parseValuedArgs(
+        rest.slice(1), new Set(['--summary', '--result', '--reviewer']),
+      );
+      const featureId = positional[0];
+      if (!featureId || !flags['--summary'] || !flags['--reviewer']) {
+        console.error('Usage: sdlc-harness review record <feature-id> --reviewer <id> --summary <text> [--result passed|failed]');
+        process.exitCode = 1;
+        return;
+      }
+      try {
+        const evidence = recordReview(cwd, featureId, {
+          reviewer: flags['--reviewer'],
+          result: flags['--result'] || 'passed',
+          summary: flags['--summary'],
+        });
+        console.log(`Recorded ${evidence.result} review for ${featureId} by ${evidence.reviewer}.`);
+      } catch (err) {
+        console.error(err.message);
+        process.exitCode = 1;
+        return;
       }
       break;
     }
@@ -294,8 +408,53 @@ async function main() {
       break;
     }
     case 'evidence': {
+      if (rest[0] === 'approval') {
+        const { flags, positional } = parseValuedArgs(
+          rest.slice(1), new Set(['--actor', '--summary']),
+        );
+        const artifact = positional[0];
+        if (!artifact || !flags['--actor'] || !flags['--summary']) {
+          console.error('Usage: sdlc-harness evidence approval <artifact> --actor <id> --summary <text>');
+          process.exitCode = 1;
+          return;
+        }
+        try {
+          const evidence = recordArtifactApproval(cwd, artifact, {
+            actor: flags['--actor'], summary: flags['--summary'],
+          });
+          console.log(`Recorded approval for ${evidence.artifact} by ${evidence.actor} (${evidence.content_hash}).`);
+        } catch (err) {
+          console.error(err.message);
+          process.exitCode = 1;
+        }
+        break;
+      }
+      if (rest[0] === 'manual') {
+        const { flags, positional } = parseValuedArgs(
+          rest.slice(1), new Set(['--verification', '--result', '--notes', '--actor']),
+        );
+        const featureId = positional[0];
+        if (!featureId || !flags['--verification'] || !flags['--result'] || !flags['--notes']) {
+          console.error('Usage: sdlc-harness evidence manual <feature-id> --verification <index> --result <passed|failed> --notes <text> [--actor <id>]');
+          process.exitCode = 1;
+          return;
+        }
+        try {
+          const evidence = recordManualEvidence(cwd, featureId, {
+            verificationIndex: Number(flags['--verification']),
+            result: flags['--result'],
+            notes: flags['--notes'],
+            actor: flags['--actor'] || resolveOwner(),
+          });
+          console.log(`Recorded ${evidence.result} manual verification ${evidence.verification_index} for ${featureId}.`);
+        } catch (err) {
+          console.error(err.message);
+          process.exitCode = 1;
+        }
+        break;
+      }
       if (rest[0] !== 'import') {
-        console.error('Usage: sdlc-harness evidence import <feature-id> --ci-run <run-id> [--owner <o>] [--repo <r>]');
+        console.error('Usage: sdlc-harness evidence <approval|manual|import> ...');
         process.exitCode = 1;
         return;
       }
@@ -339,8 +498,88 @@ async function main() {
       }
       break;
     }
+    case 'env': {
+      if (rest[0] && rest[0] !== 'check') {
+        console.error('Usage: sdlc-harness env [check]');
+        process.exitCode = 1;
+        return;
+      }
+      const config = loadConfig(path.join(cwd, 'harness.config.json'));
+      const configuredKeys = Object.keys(config.commands).filter((key) => config.commands[key]);
+      if (rest[0] !== 'check') {
+        if (configuredKeys.length === 0) {
+          console.log('No environment commands configured in harness.config.json\'s "commands" field.');
+        } else {
+          console.log('Configured environment commands:');
+          for (const key of configuredKeys) console.log(`  ${key}: ${config.commands[key]}`);
+        }
+        break;
+      }
+      const { configured, ok, results } = runEnvCheck(cwd);
+      if (!configured) {
+        console.log('No environment commands configured — nothing to check.');
+        break;
+      }
+      for (const r of results) {
+        console.log(`[${r.passed ? 'PASS' : 'FAIL'}] ${r.key}: ${r.command} (exit ${r.exitCode})`);
+      }
+      if (!ok) process.exitCode = 1;
+      break;
+    }
+    case 'feedback': {
+      if (rest[0] !== 'log') {
+        console.error('Usage: sdlc-harness feedback log --source <text> --severity <S1|S2|S3|S4> --observation <text> --disposition <Actioned|Deferred|Declined|Monitoring> [--detail <text>] [--date <YYYY-MM-DD>]');
+        process.exitCode = 1;
+        return;
+      }
+      const { flags } = parseValuedArgs(
+        rest.slice(1), new Set(['--source', '--severity', '--observation', '--disposition', '--detail', '--date']),
+      );
+      try {
+        const entry = recordFeedback(cwd, {
+          date: flags['--date'],
+          source: flags['--source'],
+          severity: flags['--severity'],
+          observation: flags['--observation'],
+          disposition: flags['--disposition'],
+          detail: flags['--detail'],
+        });
+        console.log(`Logged ${entry.severity} feedback (${entry.disposition}) from ${entry.source}.`);
+      } catch (err) {
+        console.error(err.message);
+        process.exitCode = 1;
+        return;
+      }
+      break;
+    }
+    case 'session': {
+      if (rest[0] !== 'close') {
+        console.error('Usage: sdlc-harness session close');
+        process.exitCode = 1;
+        return;
+      }
+      const result = runSessionClose(cwd);
+      if (!result.validate.ok) {
+        console.error(`validate FAILED with ${result.validate.errors.length} error(s):`);
+        for (const e of result.validate.errors) console.error(`  - ${e}`);
+      } else {
+        console.log('validate: OK');
+      }
+      if (result.env.configured) {
+        for (const r of result.env.results) {
+          console.log(`[${r.passed ? 'PASS' : 'FAIL'}] env.${r.key}: ${r.command} (exit ${r.exitCode})`);
+        }
+      } else {
+        console.log('env: no environment commands configured');
+      }
+      console.log(`git: ${result.git.clean ? 'clean' : `${result.git.changedFiles.length} uncommitted change(s)`} at ${result.git.commitSha || '(no commit)'}`);
+      console.log(`features: ${JSON.stringify(result.status.counts)}`);
+      for (const action of result.status.nextActions) console.log(`next: ${action}`);
+      if (!result.ok) process.exitCode = 1;
+      break;
+    }
     default:
-      printUsage();
+      printUsage({ unknown: true });
       process.exitCode = 1;
   }
 }

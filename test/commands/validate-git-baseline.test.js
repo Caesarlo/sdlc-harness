@@ -28,7 +28,10 @@ function featureList(status) {
       status,
       dependencies: [],
       verification: [{ type: 'automated', command: 'true', expected: 'exit 0' }],
-      evidence: status === 'passing' ? [{ kind: 'review', result: 'approved', recorded_at: new Date().toISOString() }] : [],
+      evidence: status === 'passing' ? [
+        { kind: 'test', command: 'true', result: 'passed', recorded_at: new Date().toISOString() },
+        { kind: 'review', result: 'passed', recorded_at: new Date().toISOString() },
+      ] : [],
       source_refs: ['docs/notes.md'],
     }],
   }, null, 2) + '\n';

@@ -16,13 +16,13 @@ test('ADR template documents the topic field used by adr-coverage', () => {
 
 test('pre-commit hook invokes sdlc-harness validate', () => {
   const content = fs.readFileSync(path.join(TEMPLATES_ROOT, 'special', 'githooks', 'pre-commit.tmpl'), 'utf8');
-  assert.match(content, /npx sdlc-harness validate/);
+  assert.match(content, /npx @caesarlo\/sdlc-harness validate/);
 });
 
 test('deploy.yml.tmpl renders with the project name and runs validate before deploying', () => {
   const rendered = renderFile(path.join(TEMPLATES_ROOT, 'special', 'ci', 'deploy.yml.tmpl'), { projectName: 'demo' });
   assert.match(rendered, /demo/);
-  assert.match(rendered, /npx sdlc-harness validate/);
+  assert.match(rendered, /npx @caesarlo\/sdlc-harness validate/);
   assert.match(rendered, /needs: validate-harness/);
 });
 

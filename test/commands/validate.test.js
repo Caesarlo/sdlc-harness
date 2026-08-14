@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { runValidate } from '../../src/commands/validate.js';
+import { recordArtifactApproval } from '../../src/commands/artifact-approval.js';
 
 function seedRepo(dir, featureListOverrides = {}) {
   fs.mkdirSync(path.join(dir, 'docs', 'adr'), { recursive: true });
@@ -75,4 +76,20 @@ test('fails and reports errors from a specific validator, prefixed by name', () 
   const result = runValidate(dir);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.startsWith('[pass-gate]')));
+});
+
+test('validate rejects an artifact changed after human approval', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdlc-harness-'));
+  seedRepo(dir, { id: 'M0-SCOPE-001' });
+  fs.mkdirSync(path.join(dir, 'docs', 'product'), { recursive: true });
+  const artifact = path.join(dir, 'docs', 'product', 'requirements.md');
+  fs.writeFileSync(artifact, '# Approved requirements\n');
+  recordArtifactApproval(dir, 'docs/product/requirements.md', {
+    actor: 'human:owner', summary: 'Approved scope',
+  });
+  fs.appendFileSync(artifact, '\nChanged.\n');
+
+  const result = runValidate(dir);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((error) => error.startsWith('[artifact-approval]')));
 });

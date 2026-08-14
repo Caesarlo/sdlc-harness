@@ -12,7 +12,7 @@
   <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.0-f59e0b?style=flat-square&labelColor=262626" alt="Version 0.1.0"></a>
   <a href="package.json"><img src="https://img.shields.io/badge/Node.js-%3E%3D22-339933?style=flat-square&logo=nodedotjs&logoColor=white&labelColor=262626" alt="Node.js 22 or newer"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2563eb?style=flat-square&labelColor=262626" alt="MIT License"></a>
-  <a href="https://sdlc-harness.mintlify.site/sdlc-harness-docs"><img src="https://img.shields.io/badge/docs-sdlc--harness.mintlify.site-8b5cf6?style=flat-square&labelColor=262626" alt="Documentation site"></a>
+  <a href="https://www.gump.top/sdlc-harness-docs/"><img src="https://img.shields.io/badge/docs-www.gump.top-8b5cf6?style=flat-square&labelColor=262626" alt="Documentation site"></a>
 </p>
 
 <p align="center">
@@ -33,10 +33,10 @@
   <a href="#quickstart">Quickstart</a>  · 
   <a href="#the-full-sdlc-workflow">Workflow</a>  · 
   <a href="#commands">Commands</a>  · 
-  <a href="https://sdlc-harness.mintlify.site/sdlc-harness-docs">Full documentation</a>
+  <a href="https://www.gump.top/sdlc-harness-docs/">Full documentation</a>
 </p>
 
-<p align="center"><code>npx sdlc-harness adopt</code></p>
+<p align="center"><code>npx @caesarlo/sdlc-harness adopt</code></p>
 
 The **Software Development Life Cycle (SDLC)** is the complete process through which software
 moves from requirements and architecture to implementation, verification, deployment, and
@@ -68,25 +68,28 @@ Requires **Node.js 22 or later**.
 
 > [!TIP]
 > `adopt` creates only missing files. Existing files stay untouched and are listed for manual
-> review.
+> review. If the repo already has its own `AGENTS.md`, adopt never edits it — instead it writes
+> the harness's routing/rules content to `AGENTS.sdlc-harness.md` and prints a reminder to add a
+> one-line reference from the existing `AGENTS.md`. `validate` keeps failing with an
+> `agents-onboarding` error until that reference exists, so this can't be silently forgotten.
 
 ### Add it to an existing repository
 
 ```bash
 cd your-project
-npx sdlc-harness adopt
+npx @caesarlo/sdlc-harness adopt
 git config core.hooksPath .githooks
-npx sdlc-harness validate
-npx sdlc-harness status
+npx @caesarlo/sdlc-harness validate
+npx @caesarlo/sdlc-harness status
 ```
 
 ### Start in an empty repository
 
 ```bash
 mkdir your-project && cd your-project
-npx sdlc-harness init
+npx @caesarlo/sdlc-harness init
 git config core.hooksPath .githooks
-npx sdlc-harness validate
+npx @caesarlo/sdlc-harness validate
 ```
 
 Then ask your coding agent to read `AGENTS.md` and help define or decompose the first real
@@ -122,7 +125,7 @@ The harness provides three layers:
 `status` gives an agent or developer the same machine-readable view of current work:
 
 ```bash
-npx sdlc-harness status
+npx @caesarlo/sdlc-harness status
 ```
 
 ```json
@@ -165,7 +168,12 @@ The validator checks:
 - evidence and a `review` entry for every `passing` feature;
 - monotonic completion: a previously passing feature cannot silently regress;
 - coverage of ADR topics required by `harness.config.json`;
-- real `source_refs` for non-placeholder features.
+- real `source_refs` for non-placeholder features;
+- no requirement/story/acceptance-criterion gaps in the traceability matrix — uncovered
+  requirements, orphan stories, orphan features, and unverified acceptance criteria all
+  fail `validate` once scope placeholders are decomposed;
+- every artifact-level approval (`sdlc-harness evidence approval`) still matches the
+  current SHA-256 content hash of the file it approved.
 
 Validation records the last successful feature state under `.harness/`, allowing later runs to
 detect regressions — see [Commands](#commands) above for how git history is preferred over this
@@ -182,11 +190,14 @@ by every successful `validate` run — is gitignored; the scaffolded `.gitignore
 ## The full SDLC workflow
 
 The repository includes guidance for nine stages, but they are not a mandatory pipeline.
-Stages 4, 6, 7, 8, and 9 are the **always-required core loop** for any feature. Stages 1,
-2, 3, and 5 are **conditionally required** — each stage document states at the top when
-it applies, and `AGENTS.md`'s Routing Map tells an agent which entry point fits the
-change at hand (new capability vs. small fix vs. incident vs. resuming an existing
-feature).
+Stages 4, 6, and 7 are the **always-required core loop** for any feature. Stages 1, 2, 3,
+and 5 are **conditionally required** — each stage document states at the top when it
+applies, and `AGENTS.md`'s Routing Map tells an agent which entry point fits the change
+at hand (new capability vs. small fix vs. incident vs. resuming an existing feature).
+Stages 8 and 9 are gated by `harness.config.json`'s `deploymentMode`/`observabilityMode`
+(each defaults to always-required, so existing repos see no behavior change) — a library,
+CLI, or internal script with no deployment target or post-release audience can set either
+to `"none"` instead of running through a stage that doesn't apply to it.
 
 1. Requirements *(when scope is unclear)*
 2. Architecture & Technical Design (ADRs) *(when the change is load-bearing)*
@@ -195,8 +206,8 @@ feature).
 5. Milestone Planning *(when new or re-sequenced planning is actually needed)*
 6. Agile Development (TDD) — **always**
 7. Self-Acceptance Testing — **always**
-8. Deployment — **always**
-9. Observability & Feedback Loop — **always**
+8. Deployment *(per `deploymentMode`; defaults to always-required)*
+9. Observability & Feedback Loop *(per `observabilityMode`; defaults to always-required)*
 
 ```mermaid
 flowchart TB
@@ -253,10 +264,19 @@ git config core.hooksPath .githooks
 | `sdlc-harness init`          | Scaffold the complete harness in an empty or new repository.            |
 | `sdlc-harness adopt`         | Add missing harness files without overwriting existing files.           |
 | `sdlc-harness validate`      | Run every structural and governance check; exit non-zero on failure. The `passing_is_monotonic` check prefers a git baseline (`origin/main`/`main`, or `$HARNESS_BASE_REF`/`$GITHUB_BASE_REF`) over the local `.harness/` snapshot cache, so a regression PR can't sneak past a fresh CI checkout that has no snapshot to compare against. |
-| `sdlc-harness status`        | Print milestone counts, feature counts, and the active feature as JSON. |
-| `sdlc-harness new-feature`   | Interactively append a new feature to`feature_list.json`.             |
+| `sdlc-harness status`        | Print feature state, approvals, traceability gaps, and suggested next actions as JSON. |
+| `sdlc-harness traceability`  | Print the requirement → story → acceptance criterion → feature → verification matrix as JSON; exit non-zero on uncovered/orphaned links once scope placeholders are decomposed. |
+| `sdlc-harness new-feature`   | Interactively append a new feature to `feature_list.json` for manual/debug use. |
+| `sdlc-harness new-feature --input <json-file>` | Agent-facing, non-interactive feature creation. The JSON file must be inside the repository and cannot inject claim, evidence, workspace, or a completed status. |
 | `sdlc-harness new-milestone` | Interactively append a new milestone to`feature_list.json`.           |
+| `sdlc-harness feature start <feature-id>` | Atomically claim a ready feature and move it to `in_progress`. |
+| `sdlc-harness feature complete <feature-id>` | Atomically require an active claim, passing current-commit verification, dependencies, and a later passing review before moving to `passing`. |
+| `sdlc-harness feature block <feature-id> --reason <text>` | Record a blocker, release the claim, and move the feature to `blocked`. |
+| `sdlc-harness feature reopen <feature-id>` | Clear a blocker and return a blocked feature to `not_started`. |
 | `sdlc-harness verify <feature-id>` | Actually run a feature's declared verification commands and record real pass/fail evidence (with exit code and commit sha) — the only supported way to add "test" evidence. |
+| `sdlc-harness evidence manual <feature-id> ...` | Record an attested result for a declared `manual` verification without executing its description as shell code. |
+| `sdlc-harness evidence approval <artifact> --actor <id> --summary <text>` | Record human/business approval as project-level evidence bound to the artifact's SHA-256 content hash and current commit. Editing the artifact makes the approval stale and `validate` fails until it is approved again. |
+| `sdlc-harness review record <feature-id> ...` | Record structured review evidence bound to the current commit. |
 | `sdlc-harness claim <feature-id>` | Atomically claim a feature (sets `owner`, moves `not_started` → `in_progress`), subject to the owner's WIP limit. |
 | `sdlc-harness claim --next` | Atomically claim the highest-priority ready feature (not started, dependencies passing, unclaimed). |
 | `sdlc-harness claim renew <feature-id>` | Extend a claim's lease before it expires. |
@@ -266,6 +286,10 @@ git config core.hooksPath .githooks
 | `sdlc-harness workspace remove <feature-id>` | Remove a workspace. Refuses if it has uncommitted or unpushed work (`--force` to override). |
 | `sdlc-harness workspace prune` | Remove workspaces whose claim has been released or expired; skips (reports) any that are dirty. Never touches a workspace under an active claim. |
 | `sdlc-harness workspace status` | List all workspaces with their claim/on-disk state, as JSON. |
+| `sdlc-harness env` | List the project-level environment commands configured in `harness.config.json`'s `commands` field. |
+| `sdlc-harness env check` | Actually run the configured `bootstrap`/`verify`/`e2e`/`health` commands, in that order, stopping at the first failure — proves the project installs, builds, and runs, not just that `feature_list.json` is valid. |
+| `sdlc-harness session close` | Read-only end-of-session report: runs `validate`, runs `env check` (if configured), and summarizes git state and `status`'s ready/blocked/next-action view — exits non-zero if `validate` or a configured environment command failed. |
+| `sdlc-harness feedback log --source <text> --severity <S1\|S2\|S3\|S4> --observation <text> --disposition <Actioned\|Deferred\|Declined\|Monitoring> [--detail <text>]` | Append a well-formed entry to `docs/product/feedback-log.md` (stage 9) — enforces the shape by construction instead of trusting a hand-written Markdown entry; `validate` also checks any entry that was hand-edited anyway. |
 
 All claim commands accept `--owner <name>` (defaults to `harness.config.json`'s `defaultOwner`), `--actor <id>` (distinguishes multiple Agent sessions run by the same owner — claim uniqueness is always per-feature, never per-actor), and `--ttl <minutes>` (lease length, default 120).
 
@@ -283,8 +307,37 @@ All claim commands accept `--owner <name>` (defaults to `harness.config.json`'s 
 
 `harness.config.json`'s `collaborationMode` controls whether claim/lease is visible:
 
-- **`"solo"`** (the default): you never run `claim`/`release` yourself. `sdlc-harness verify` claims the feature for `defaultOwner` before running and releases it afterward, invisibly — the underlying CAS/claim safety is still there, it just never surfaces. If another owner actively holds the claim, `verify` still refuses to run rather than racing evidence writes against them.
-- **`"team"`**: `verify` never manages claims implicitly. Claim a feature explicitly first (`sdlc-harness claim <feature-id>` or `claim --next`), then `verify`.
+- **`"solo"`** (the default): use the high-level `feature start` and `feature complete`
+  commands; you do not need the lower-level `claim`/`release` commands. An ad-hoc
+  `verify` can still auto-claim temporarily, but completion always requires a deliberate
+  `feature start` so lifecycle ownership remains observable.
+- **`"team"`**: use the same high-level feature commands, or the lower-level claim and
+  workspace commands when coordinating concurrent Agents and machines.
+
+### Project environment commands
+
+`sdlc-harness validate` only checks `feature_list.json` and the docs it depends on — it
+never executes project code, so passing `validate` proves nothing about whether the
+project actually installs, builds, or runs. `harness.config.json`'s `commands` field
+closes that gap:
+
+```json
+{
+  "commands": {
+    "bootstrap": "npm install",
+    "verify": "npm test && npm run lint",
+    "e2e": "npm run test:e2e",
+    "health": "curl -f http://localhost:3000/health"
+  }
+}
+```
+
+All four are optional; `sdlc-harness env check` runs whichever are set, in that order,
+and stops at the first failure. `start` and `cleanup` are also recognized keys but aren't
+run by `env check` — they're situational (start a long-running dev server, tear down
+state) rather than pass/fail checks; reference them directly when needed. Leaving
+`commands` empty keeps today's behavior — `env check` reports nothing configured rather
+than failing.
 
 ## Agent compatibility
 

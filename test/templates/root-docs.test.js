@@ -8,7 +8,7 @@ const TEMPLATES_ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '
 
 test('AGENTS.md.tmpl renders with required routing and rules', () => {
   const rendered = renderFile(path.join(TEMPLATES_ROOT, 'AGENTS.md.tmpl'), { projectName: 'demo' });
-  assert.match(rendered, /npx sdlc-harness validate/);
+  assert.match(rendered, /npx @caesarlo\/sdlc-harness validate/);
   assert.match(rendered, /git config core\.hooksPath \.githooks/);
   assert.match(rendered, /kind: "review"/);
   for (let i = 1; i <= 9; i++) {

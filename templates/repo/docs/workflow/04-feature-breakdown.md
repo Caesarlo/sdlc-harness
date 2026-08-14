@@ -20,10 +20,18 @@
   it cites — not a fresh paraphrase of it. Each `verification` entry must be an actually
   runnable command or an explicit manual check, and its `expected` value should mirror
   that criterion's Then clause.
+- Put the exact `US-N.AC-N` reference on each corresponding verification entry's
+  `source_refs` as well as on the feature. Feature-level refs prove scope; verification-
+  level refs prove that a particular acceptance criterion has a concrete check.
 - Each feature's `source_refs` must point at the ADR or requirements section that
   justifies it, and at the specific `US-N.AC-N` acceptance criterion it satisfies rather
   than the story as a whole — this is checked by the stage-gate validator.
-- Use `npx sdlc-harness new-feature` to append entries with the required shape.
+- Use `npx @caesarlo/sdlc-harness new-feature` to append entries with the required shape.
+- Set an optional numeric `priority` (lower runs first) when features within a milestone
+  should be picked up in a specific order; `sdlc-harness claim --next` and `status`'s
+  `readyFeatures` sort by it. Features without `priority` sort after prioritized ones, in
+  the order they were added — so leaving it unset is fine for milestones with no ordering
+  preference.
 
 ## Definition of Ready (before marking a feature `in_progress`)
 - Every id in its `dependencies` array is `passing` — enforced by the
@@ -38,5 +46,8 @@
   milestone being planned.
 
 ## Exit Conditions
-- `npx sdlc-harness validate` passes: structural shape, dependency graph, dependency
+- `npx @caesarlo/sdlc-harness validate` passes: structural shape, dependency graph, dependency
   readiness, and stage-gate (source_refs resolve) all succeed.
+- `npx @caesarlo/sdlc-harness traceability` has no uncovered requirement, orphan story,
+  orphan feature, or unverified acceptance criterion after the `*-SCOPE-001` placeholder
+  has been fully decomposed.

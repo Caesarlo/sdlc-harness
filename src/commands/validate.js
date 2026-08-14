@@ -9,6 +9,10 @@ import { validateDependencyReadiness } from '../validators/dependency-readiness.
 import { validateMilestoneOrder } from '../validators/milestone-order.js';
 import { validateAdrCoverage } from '../validators/adr-coverage.js';
 import { validateStageGate } from '../validators/stage-gate.js';
+import { validateAgentsOnboarding } from '../validators/agents-onboarding.js';
+import { validateFeedbackLog } from '../validators/feedback-log.js';
+import { validateArtifactApprovals } from '../validators/artifact-approval.js';
+import { validateTraceability } from '../validators/traceability.js';
 import { readFeatureListAtRef, resolveBaseRef } from '../lib/git-baseline.js';
 
 const SNAPSHOT_RELATIVE_PATH = path.join('.harness', 'last-validated-features.json');
@@ -66,6 +70,10 @@ export function runValidate(repoRoot) {
     ['milestone-order', validateMilestoneOrder(data)],
     ['adr-coverage', validateAdrCoverage(config, path.join(repoRoot, 'docs', 'adr'))],
     ['stage-gate', validateStageGate(data, repoRoot)],
+    ['agents-onboarding', validateAgentsOnboarding(repoRoot)],
+    ['feedback-log', validateFeedbackLog(repoRoot, config)],
+    ['artifact-approval', validateArtifactApprovals(data, repoRoot)],
+    ['traceability', validateTraceability(data, repoRoot)],
   ];
 
   const errors = [];
