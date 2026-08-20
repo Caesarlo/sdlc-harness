@@ -250,6 +250,8 @@ git config core.hooksPath .githooks
 
 ## 命令
 
+运行 `sdlc-harness --help`（或 `-h`）查看完整命令列表；运行 `sdlc-harness <command> --help`（`-h` 也可以，出现在参数任意位置都生效）查看某个命令自己的用法，例如 `sdlc-harness feature --help` 或 `sdlc-harness milestone archive --help`。
+
 | 命令                           | 作用                                               |
 | ------------------------------ | -------------------------------------------------- |
 | `sdlc-harness init`          | 在空仓库或新仓库中生成完整 harness。               |

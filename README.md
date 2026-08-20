@@ -259,6 +259,8 @@ git config core.hooksPath .githooks
 
 ## Commands
 
+Run `sdlc-harness --help` (or `-h`) for the full command list, or `sdlc-harness <command> --help` (works with `-h` too, and in any argument position) for a command's own usage — e.g. `sdlc-harness feature --help` or `sdlc-harness milestone archive --help`.
+
 | Command                        | What it does                                                            |
 | ------------------------------ | ----------------------------------------------------------------------- |
 | `sdlc-harness init`          | Scaffold the complete harness in an empty or new repository.            |

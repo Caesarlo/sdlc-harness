@@ -32,11 +32,144 @@ import {
 const [, , command, ...rest] = process.argv;
 const cwd = process.cwd();
 
+// Single source of truth for both the top-level command list and each
+// command's own `--help`/`-h` output, so the two can never drift apart.
+const HELP_TEXT = {
+  init: {
+    summary: 'Scaffold the complete harness in an empty or new repository.',
+    usage: ['sdlc-harness init [--force]'],
+  },
+  adopt: {
+    summary: 'Add missing harness files to an existing repository without overwriting existing files.',
+    usage: ['sdlc-harness adopt'],
+  },
+  validate: {
+    summary: 'Run every structural and governance check; exit non-zero on failure.',
+    usage: ['sdlc-harness validate'],
+  },
+  status: {
+    summary: 'Print feature state, approvals, traceability gaps, and suggested next actions as JSON.',
+    usage: ['sdlc-harness status'],
+  },
+  traceability: {
+    summary: 'Print the requirement -> story -> acceptance criterion -> feature -> verification matrix as JSON.',
+    usage: ['sdlc-harness traceability'],
+  },
+  'new-feature': {
+    summary: 'Append a new feature to feature_list.json.',
+    usage: [
+      'sdlc-harness new-feature',
+      '  Interactive prompts, for manual/debug use.',
+      'sdlc-harness new-feature --input <json-file>',
+      '  Agent-facing, non-interactive. The JSON file must be inside the repository and',
+      '  cannot inject claim, evidence, workspace, or a completed status.',
+    ],
+  },
+  'new-milestone': {
+    summary: 'Interactively append a new milestone to feature_list.json.',
+    usage: ['sdlc-harness new-milestone'],
+  },
+  milestone: {
+    summary: 'Archive a completed milestone out of feature_list.json, or list what has been archived.',
+    usage: [
+      'sdlc-harness milestone archive <milestone-id> [--actor <id>]',
+      '  Moves the milestone and all of its features to .harness/archive/<milestone-id>.json.',
+      '  Every feature in the milestone must already be "passing".',
+      'sdlc-harness milestone list-archived',
+      '  List archived milestones (id, title, feature count, archived-at/by) as JSON.',
+    ],
+  },
+  feature: {
+    summary: 'Claim-lifecycle actions on a single feature.',
+    usage: [
+      'sdlc-harness feature start <feature-id> [--owner <name>] [--actor <id>] [--ttl <minutes>]',
+      'sdlc-harness feature complete <feature-id> [--owner <name>]',
+      'sdlc-harness feature block <feature-id> --reason <text> [--owner <name>]',
+      'sdlc-harness feature reopen <feature-id> [--actor <id>]',
+    ],
+  },
+  verify: {
+    summary: "Run a feature's declared verification commands and record pass/fail evidence.",
+    usage: ['sdlc-harness verify <feature-id>'],
+  },
+  review: {
+    summary: 'Record structured review evidence bound to the current commit.',
+    usage: ['sdlc-harness review record <feature-id> --reviewer <id> --summary <text> [--result passed|failed]'],
+  },
+  claim: {
+    summary: 'Claim a feature (or the next ready one) for work.',
+    usage: [
+      'sdlc-harness claim <feature-id> [--owner <name>] [--actor <id>] [--ttl <minutes>] [--push [--remote <r>] [--branch <b>]]',
+      'sdlc-harness claim --next [--owner <name>] [--actor <id>] [--ttl <minutes>]',
+      'sdlc-harness claim renew <feature-id> [--owner <name>] [--ttl <minutes>]',
+      'sdlc-harness claim <feature-id> --takeover-expired [--owner <name>] [--actor <id>] [--ttl <minutes>]',
+    ],
+  },
+  release: {
+    summary: 'Release a claim (reverts in_progress back to not_started).',
+    usage: ['sdlc-harness release <feature-id> [--owner <name>]'],
+  },
+  workspace: {
+    summary: 'Manage per-feature git worktrees.',
+    usage: [
+      'sdlc-harness workspace create <feature-id> [--base <branch>]',
+      'sdlc-harness workspace remove <feature-id> [--force]',
+      'sdlc-harness workspace prune [--force]',
+      'sdlc-harness workspace status',
+    ],
+  },
+  provider: {
+    summary: 'Check external provider (GitHub) repository configuration.',
+    usage: ['sdlc-harness provider github check [--owner <o>] [--repo <r>] [--branch <b>]'],
+  },
+  evidence: {
+    summary: 'Record or import verification/approval evidence.',
+    usage: [
+      'sdlc-harness evidence approval <artifact> --actor <id> --summary <text>',
+      'sdlc-harness evidence manual <feature-id> --verification <index> --result <passed|failed> --notes <text> [--actor <id>]',
+      'sdlc-harness evidence import <feature-id> --ci-run <run-id> [--owner <o>] [--repo <r>]',
+    ],
+  },
+  env: {
+    summary: 'List or run the project-level environment commands from harness.config.json.',
+    usage: ['sdlc-harness env', 'sdlc-harness env check'],
+  },
+  session: {
+    summary: 'Read-only end-of-session report (validate + env check + git/status summary).',
+    usage: ['sdlc-harness session close'],
+  },
+  feedback: {
+    summary: 'Append a well-formed entry to docs/product/feedback-log.md.',
+    usage: [
+      'sdlc-harness feedback log --source <text> --severity <S1|S2|S3|S4> --observation <text>',
+      '    --disposition <Actioned|Deferred|Declined|Monitoring> [--detail <text>] [--date <YYYY-MM-DD>]',
+    ],
+  },
+};
+
 function printUsage({ unknown = false } = {}) {
   const write = unknown ? console.error : console.log;
   if (unknown) write(`Unknown command: ${command ?? '(none)'}`);
-  write('Usage: sdlc-harness <init|adopt|validate|status|traceability|new-feature|new-milestone|milestone|feature|verify|review|evidence|claim|release|workspace|provider|env|session|feedback>');
-  write('Run "sdlc-harness help" or "sdlc-harness --help" to show this message.');
+  write('Usage: sdlc-harness <command> [args]');
+  write('');
+  write('Commands:');
+  for (const [name, entry] of Object.entries(HELP_TEXT)) {
+    write(`  ${name.padEnd(14)} ${entry.summary}`);
+  }
+  write('');
+  write('Run "sdlc-harness <command> --help" for a command\'s full usage.');
+}
+
+function printCommandHelp(name) {
+  const entry = HELP_TEXT[name];
+  console.log(entry.summary);
+  console.log('');
+  console.log('Usage:');
+  for (const line of entry.usage) console.log(`  ${line}`);
+}
+
+function isHelpRequest(args) {
+  return args.includes('-h') || args.includes('--help');
 }
 
 function parseValuedArgs(args, valuedFlags) {
@@ -77,12 +210,21 @@ function resolveOwner(explicitOwner) {
 }
 
 async function main() {
+  if (command === 'help' || command === '--help' || command === '-h') {
+    printUsage();
+    return;
+  }
+  if (!command) {
+    printUsage({ unknown: true });
+    process.exitCode = 1;
+    return;
+  }
+  if (HELP_TEXT[command] && isHelpRequest(rest)) {
+    printCommandHelp(command);
+    return;
+  }
+
   switch (command) {
-    case 'help':
-    case '--help':
-    case '-h':
-      printUsage();
-      break;
     case 'init': {
       const force = process.argv.includes('--force');
       try {
