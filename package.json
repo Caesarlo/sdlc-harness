@@ -1,6 +1,6 @@
 {
   "name": "@caesarlo/sdlc-harness",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Portable CLI and workflow docs for a requirements-to-deployment coding-agent harness",
   "type": "module",
   "bin": {
