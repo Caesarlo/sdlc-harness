@@ -14,6 +14,7 @@ import { validateFeedbackLog } from '../validators/feedback-log.js';
 import { validateArtifactApprovals } from '../validators/artifact-approval.js';
 import { validateTraceability } from '../validators/traceability.js';
 import { readFeatureListAtRef, resolveBaseRef } from '../lib/git-baseline.js';
+import { loadArchivedFeatureIds } from '../lib/archive.js';
 
 const SNAPSHOT_RELATIVE_PATH = path.join('.harness', 'last-validated-features.json');
 
@@ -62,10 +63,12 @@ export function runValidate(repoRoot) {
     return { ok: false, errors: structuralResult.errors.map((error) => `[structural] ${error}`) };
   }
 
+  const archivedIds = loadArchivedFeatureIds(repoRoot);
+
   const namedResults = [
     ['structural', structuralResult],
-    ['dependency-cycles', validateDependencyCycles(data)],
-    ['pass-gate', validatePassGate(data, previousSnapshot)],
+    ['dependency-cycles', validateDependencyCycles(data, archivedIds)],
+    ['pass-gate', validatePassGate(data, previousSnapshot, archivedIds)],
     ['dependency-readiness', validateDependencyReadiness(data)],
     ['milestone-order', validateMilestoneOrder(data)],
     ['adr-coverage', validateAdrCoverage(config, path.join(repoRoot, 'docs', 'adr'))],

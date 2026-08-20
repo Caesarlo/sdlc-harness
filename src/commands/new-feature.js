@@ -11,6 +11,7 @@ import { validateStructural } from '../validators/structural.js';
 import { validateDependencyCycles } from '../validators/dependency-cycles.js';
 import { validateMilestoneOrder } from '../validators/milestone-order.js';
 import { validateStageGate } from '../validators/stage-gate.js';
+import { loadArchivedFeatureIds } from '../lib/archive.js';
 
 function normalizeFeature(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
@@ -87,7 +88,7 @@ export function runNewFeatureFromFile(repoRoot, inputPath) {
   const checks = [
     ['schema', validateSchema(candidate, repoRoot)],
     ['structural', validateStructural(candidate)],
-    ['dependency-cycles', validateDependencyCycles(candidate)],
+    ['dependency-cycles', validateDependencyCycles(candidate, loadArchivedFeatureIds(repoRoot))],
     ['milestone-order', validateMilestoneOrder(candidate)],
     ['stage-gate', validateStageGate(candidate, repoRoot)],
   ];

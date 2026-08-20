@@ -88,3 +88,10 @@ test('rejects a regression against the previous snapshot (passing_is_monotonic)'
   assert.equal(result.ok, false);
   assert.match(result.errors.join(' '), /passing_is_monotonic/);
 });
+
+test('does not treat an archived feature as a passing_is_monotonic regression', () => {
+  const previousSnapshot = { features: [feature({ status: 'passing', evidence: [{ kind: 'review', result: 'passed' }] })] };
+  const data = { features: [] }; // moved to .harness/archive/, no longer in feature_list.json
+  const result = validatePassGate(data, previousSnapshot, new Set(['M0-FEAT-001']));
+  assert.deepEqual(result, { ok: true, errors: [] });
+});

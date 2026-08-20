@@ -4,6 +4,7 @@ import { casTransaction } from './atomic-write.js';
 import { appendEvent } from './events.js';
 import { FeatureNotFoundError } from './errors.js';
 import { resolveWipLimit } from './wip-limit.js';
+import { loadArchivedFeatureIds } from './archive.js';
 
 export const DEFAULT_TTL_MINUTES = 120;
 
@@ -104,14 +105,17 @@ function priorityRank(feature) {
 
 // Features eligible for `claim --next`: not started, not currently under an
 // unexpired claim, and every dependency is passing. Sorted by priority
-// (Array.prototype.sort is stable, so ties keep list order).
-export function listReadyFeatures(data) {
+// (Array.prototype.sort is stable, so ties keep list order). `archivedIds`
+// are feature ids moved to .harness/archive/ — they were passing when
+// archived and count as satisfied dependencies same as a live passing
+// feature (see src/lib/archive.js).
+export function listReadyFeatures(data, archivedIds = new Set()) {
   const passingIds = new Set((data.features || []).filter((f) => f.status === 'passing').map((f) => f.id));
   return (data.features || [])
     .filter((f) => {
       if (f.status !== 'not_started') return false;
       if (f.claim && !isLeaseExpired(f.claim)) return false;
-      return (f.dependencies || []).every((d) => passingIds.has(d));
+      return (f.dependencies || []).every((d) => passingIds.has(d) || archivedIds.has(d));
     })
     .sort((a, b) => priorityRank(a) - priorityRank(b));
 }
@@ -120,6 +124,7 @@ export function claimFeature(repoRoot, featureId, {
   owner, actorId, ttlMinutes = DEFAULT_TTL_MINUTES, requireReady = false,
 } = {}) {
   const featureListPath = path.join(repoRoot, 'feature_list.json');
+  const archivedIds = loadArchivedFeatureIds(repoRoot);
   const claim = casTransaction(featureListPath, (data) => {
     const feature = findFeature(data, featureId);
     if (requireReady) {
@@ -127,7 +132,7 @@ export function claimFeature(repoRoot, featureId, {
         throw new Error(`Feature ${featureId} is ${feature.status}, not ready to start`);
       }
       const passingIds = new Set((data.features || []).filter((f) => f.status === 'passing').map((f) => f.id));
-      const unmet = (feature.dependencies || []).filter((id) => !passingIds.has(id));
+      const unmet = (feature.dependencies || []).filter((id) => !passingIds.has(id) && !archivedIds.has(id));
       if (unmet.length > 0) throw new Error(`Feature ${featureId} has unmet dependencies: ${unmet.join(', ')}`);
     }
     if (feature.claim && !isLeaseExpired(feature.claim)) {
@@ -150,12 +155,13 @@ export function claimFeature(repoRoot, featureId, {
 
 export function claimNextFeature(repoRoot, { owner, actorId, ttlMinutes = DEFAULT_TTL_MINUTES } = {}) {
   const featureListPath = path.join(repoRoot, 'feature_list.json');
+  const archivedIds = loadArchivedFeatureIds(repoRoot);
   const claim = casTransaction(featureListPath, (data) => {
     const wipLimit = resolveWipLimit(data.rules);
     if (activeClaimCountForOwner(data, owner) >= wipLimit) {
       throw new WipLimitExceededError(owner, wipLimit);
     }
-    const ready = listReadyFeatures(data);
+    const ready = listReadyFeatures(data, archivedIds);
     if (ready.length === 0) throw new NoReadyFeatureError();
     const feature = ready[0];
     const record = newClaimRecord({ owner, actorId, ttlMinutes, extra: { feature_id: feature.id } });

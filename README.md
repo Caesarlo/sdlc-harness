@@ -269,6 +269,8 @@ git config core.hooksPath .githooks
 | `sdlc-harness new-feature`   | Interactively append a new feature to `feature_list.json` for manual/debug use. |
 | `sdlc-harness new-feature --input <json-file>` | Agent-facing, non-interactive feature creation. The JSON file must be inside the repository and cannot inject claim, evidence, workspace, or a completed status. |
 | `sdlc-harness new-milestone` | Interactively append a new milestone to`feature_list.json`.           |
+| `sdlc-harness milestone archive <milestone-id> [--actor <id>]` | Move a milestone and all of its features out of `feature_list.json` into `.harness/archive/<milestone-id>.json`, once every feature in it is `passing`. Archived feature ids still satisfy dependencies and count as covered in `traceability` and `validate`'s `passing_is_monotonic` check — archiving only relocates completed work so new milestones start from a lean `feature_list.json`, it never invalidates what already shipped. |
+| `sdlc-harness milestone list-archived` | List archived milestones (id, title, feature count, archived-at/by) as JSON. |
 | `sdlc-harness feature start <feature-id>` | Atomically claim a ready feature and move it to `in_progress`. |
 | `sdlc-harness feature complete <feature-id>` | Atomically require an active claim, passing current-commit verification, dependencies, and a later passing review before moving to `passing`. |
 | `sdlc-harness feature block <feature-id> --reason <text>` | Record a blocker, release the claim, and move the feature to `blocked`. |

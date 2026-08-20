@@ -260,6 +260,8 @@ git config core.hooksPath .githooks
 | `sdlc-harness new-feature`   | 通过交互问答向 `feature_list.json` 添加功能，供人工调试使用。 |
 | `sdlc-harness new-feature --input <json-file>` | 面向 Agent 的非交互创建方式；输入必须是仓库内 JSON，且不能注入 claim、evidence、workspace 或已完成状态。 |
 | `sdlc-harness new-milestone` | 通过交互问答向`feature_list.json` 添加里程碑。   |
+| `sdlc-harness milestone archive <milestone-id> [--actor <id>]` | 将一个 milestone 及其全部 feature 从 `feature_list.json` 移入 `.harness/archive/<milestone-id>.json`，前提是该 milestone 下所有 feature 都已 `passing`。归档后的 feature id 仍会被当作已满足的依赖，`traceability` 和 `validate` 的 `passing_is_monotonic` 检查也仍将其计入——归档只是把已完成的工作挪个地方存放，让新 milestone 从一份精简的 `feature_list.json` 开始，绝不会使已交付的成果失效。 |
+| `sdlc-harness milestone list-archived` | 以 JSON 列出已归档的 milestone（id、标题、feature 数量、归档时间/操作人）。 |
 | `sdlc-harness feature start <feature-id>` | 原子认领一个 ready 功能并推进到 `in_progress`。 |
 | `sdlc-harness feature complete <feature-id>` | 原子检查有效 claim、依赖、当前提交上的验证证据和后置 review，再推进到 `passing`。 |
 | `sdlc-harness feature block <feature-id> --reason <text>` | 记录阻塞原因、释放 claim 并推进到 `blocked`。 |

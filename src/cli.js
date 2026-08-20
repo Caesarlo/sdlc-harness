@@ -24,6 +24,10 @@ import { runSessionClose } from './commands/session.js';
 import { recordFeedback } from './commands/feedback.js';
 import { recordArtifactApproval } from './commands/artifact-approval.js';
 import { buildTraceability } from './lib/traceability.js';
+import {
+  archiveMilestone, listArchivedMilestones,
+  MilestoneNotFoundError, MilestoneNotArchivableError, MilestoneAlreadyArchivedError,
+} from './lib/archive.js';
 
 const [, , command, ...rest] = process.argv;
 const cwd = process.cwd();
@@ -31,7 +35,7 @@ const cwd = process.cwd();
 function printUsage({ unknown = false } = {}) {
   const write = unknown ? console.error : console.log;
   if (unknown) write(`Unknown command: ${command ?? '(none)'}`);
-  write('Usage: sdlc-harness <init|adopt|validate|status|traceability|new-feature|new-milestone|feature|verify|review|evidence|claim|release|workspace|provider|env|session|feedback>');
+  write('Usage: sdlc-harness <init|adopt|validate|status|traceability|new-feature|new-milestone|milestone|feature|verify|review|evidence|claim|release|workspace|provider|env|session|feedback>');
   write('Run "sdlc-harness help" or "sdlc-harness --help" to show this message.');
 }
 
@@ -149,6 +153,44 @@ async function main() {
     case 'new-milestone':
       await runNewMilestone(cwd);
       break;
+    case 'milestone': {
+      const sub = rest[0];
+      const { flags, positional } = parseValuedArgs(rest.slice(1), new Set(['--actor']));
+      if (sub === 'archive') {
+        const milestoneId = positional[0];
+        if (!milestoneId) {
+          console.error('Usage: sdlc-harness milestone archive <milestone-id> [--actor <id>]');
+          process.exitCode = 1;
+          return;
+        }
+        try {
+          const record = archiveMilestone(cwd, milestoneId, { actor: flags['--actor'] || resolveOwner() });
+          console.log(`Archived ${milestoneId} (${record.features.length} feature(s)) to .harness/archive/${milestoneId}.json.`);
+        } catch (err) {
+          if (err instanceof MilestoneNotFoundError || err instanceof MilestoneNotArchivableError
+            || err instanceof MilestoneAlreadyArchivedError) {
+            console.error(err.message);
+            process.exitCode = 1;
+            return;
+          }
+          throw err;
+        }
+      } else if (sub === 'list-archived') {
+        const entries = listArchivedMilestones(cwd).map((entry) => ({
+          id: entry.milestone.id,
+          title: entry.milestone.title,
+          featureCount: entry.features.length,
+          archivedAt: entry.archived_at,
+          archivedBy: entry.archived_by,
+        }));
+        console.log(JSON.stringify(entries, null, 2));
+      } else {
+        console.error('Usage: sdlc-harness milestone <archive|list-archived> ...');
+        process.exitCode = 1;
+        return;
+      }
+      break;
+    }
     case 'feature': {
       const sub = rest[0];
       const { flags, positional } = parseValuedArgs(

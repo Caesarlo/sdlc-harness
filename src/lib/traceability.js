@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { loadArchivedFeatures } from './archive.js';
 
 const REQUIREMENT_ID = /\b(?:FR|NFR)-\d+\b/g;
 const STORY_ID = /\bUS-\d+\b/g;
@@ -64,7 +65,13 @@ export function buildTraceability(repoRoot, data) {
   const storyIds = parsedStories.map((story) => story.id);
   const acceptanceIds = parsedStories.flatMap((story) => story.acceptanceCriteria);
 
-  const featureRows = (data.features || [])
+  // Archived features (see src/lib/archive.js) were passing when moved out
+  // of feature_list.json; requirements/stories/acceptance criteria they
+  // covered must keep reading as covered, not regress to "uncovered" the
+  // moment a completed milestone archives.
+  const allFeatures = [...(data.features || []), ...loadArchivedFeatures(repoRoot)];
+
+  const featureRows = allFeatures
     .filter((feature) => !ANY_PLACEHOLDER.test(feature.id))
     .map((feature) => {
       const refs = refsFrom(feature.source_refs);

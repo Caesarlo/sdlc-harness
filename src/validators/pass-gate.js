@@ -2,7 +2,7 @@ import { resolveWipLimit, DEFAULT_OWNER_BUCKET } from '../lib/wip-limit.js';
 
 const PLACEHOLDER_PATTERN = /-(SCOPE|RELEASE)-\d+$/;
 
-export function validatePassGate(data, previousSnapshot) {
+export function validatePassGate(data, previousSnapshot, archivedIds = new Set()) {
   const errors = [];
 
   const wipLimit = resolveWipLimit(data.rules);
@@ -51,6 +51,7 @@ export function validatePassGate(data, previousSnapshot) {
       .filter((f) => f.status === 'passing')
       .map((f) => f.id);
     for (const id of previouslyPassing) {
+      if (archivedIds.has(id)) continue; // moved to .harness/archive/, not regressed
       const current = data.features.find((f) => f.id === id);
       if (!current || current.status !== 'passing') {
         errors.push(`Feature ${id} was passing in the previous snapshot and is no longer passing (passing_is_monotonic)`);

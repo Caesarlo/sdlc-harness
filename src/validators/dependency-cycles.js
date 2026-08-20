@@ -1,10 +1,10 @@
-export function validateDependencyCycles(data) {
+export function validateDependencyCycles(data, archivedIds = new Set()) {
   const errors = [];
   const byId = new Map(data.features.map((f) => [f.id, f]));
 
   for (const feature of data.features) {
     for (const depId of feature.dependencies || []) {
-      if (!byId.has(depId)) errors.push(`Feature ${feature.id} depends on unknown feature: ${depId}`);
+      if (!byId.has(depId) && !archivedIds.has(depId)) errors.push(`Feature ${feature.id} depends on unknown feature: ${depId}`);
     }
   }
 

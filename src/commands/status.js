@@ -2,6 +2,7 @@ import { loadFeatureList } from '../lib/load-feature-list.js';
 import { listReadyFeatures } from '../lib/claims.js';
 import { listArtifactApprovals } from './artifact-approval.js';
 import { buildTraceability } from '../lib/traceability.js';
+import { loadArchivedFeatureIds, listArchivedMilestones } from '../lib/archive.js';
 
 function featureSummary(feature) {
   return {
@@ -27,7 +28,7 @@ export function runStatus(repoRoot) {
     .filter((f) => f.status === 'in_progress')
     .map((f) => ({ id: f.id, title: f.title, behavior: f.behavior, owner: f.owner || null }));
 
-  const readyFeatures = listReadyFeatures(data).map(featureSummary);
+  const readyFeatures = listReadyFeatures(data, loadArchivedFeatureIds(repoRoot)).map(featureSummary);
   const blockedFeatures = data.features
     .filter((feature) => feature.status === 'blocked')
     .map((feature) => ({ ...featureSummary(feature), blocker: feature.blocker || null }));
@@ -66,5 +67,6 @@ export function runStatus(repoRoot) {
     },
     nextActions,
     milestoneCount: (data.milestones || []).length,
+    archivedMilestoneCount: listArchivedMilestones(repoRoot).length,
   };
 }
